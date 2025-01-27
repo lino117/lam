@@ -9,6 +9,8 @@ activity = "1.10.0"
 constraintlayout = "2.2.0"
 materialVersion = "1.13.0-alpha10"
 mpandroidchartVersion = "v3.1.0"
+kotlin = "1.9.24"
+coreKtx = "1.15.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -20,7 +22,9 @@ activity = { group = "androidx.activity", name = "activity", version.ref = "acti
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 material-v1130alpha10 = { module = "com.google.android.material:material", version.ref = "materialVersion" }
 mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpandroidchartVersion" }
+core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 

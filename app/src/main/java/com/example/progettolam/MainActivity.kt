@@ -1,51 +1,46 @@
-package com.example.progettolam;
+package com.example.progettolam
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
+import android.content.Intent
+import android.os.Bundle
+import android.view.View
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-
-public class MainActivity extends AppCompatActivity {
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            EdgeToEdge.enable(this);
-            setContentView(R.layout.activity_main);
-            ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-                return insets;
-            });
-
-
-    };
-
-
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        this.enableEdgeToEdge()
+        setContentView(R.layout.activity_main)
+        ViewCompat.setOnApplyWindowInsetsListener(
+            findViewById(R.id.main)
+        ) { v: View, insets: WindowInsetsCompat ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
     }
 
 
-    public void jumpToDynamicFrag(View view) {
-        Intent intent = new Intent(this, dynamicTestActivity.class);
-        startActivity(intent);
+    override fun onResume() {
+        super.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
+
+    fun jumpToDynamicFrag(view: View?) {
+        val intent = Intent(
+            this,
+            DynamicTestMainActivity::class.java
+        )
+        startActivity(intent)
     }
 }
