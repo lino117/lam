@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    >
+
+    <LinearLayout
+        android:id="@+id/ll_time"
+        android:orientation="vertical"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal">
+
+        <ImageView
+            android:id="@+id/iv_time"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/selector_time" />
+
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/start" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_records"
+        android:orientation="vertical"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal">
+
+        <ImageView
+            android:id="@+id/iv_records"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/selector_records" />
+
+        <TextView
+            android:id="@+id/tv_records"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/records" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_statistic"
+        android:orientation="vertical"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal">
+
+        <ImageView
+            android:id="@+id/iv_statistic"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/selector_statistic" />
+
+        <TextView
+            android:id="@+id/tv_statistic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/statistic" />
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,30 @@
+DROP TABLE IF EXISTS records;
+
+
+ CREATE TABLE records (
+                    BaseColumns._ID INTEGER PRIMARY KEY,
+                    Activity_Name TEXT,
+                    Duration INTEGER,
+                    Step INTEGER,
+                    Start_Time STRING,
+                    Start_Day STRING,
+                    End_Time STRING,
+                    End_Day STRING)
+
+
+ INSERT INTO records (Activity_Name, Duration, Step, Start_Time, End_Time, Start_Day, End_Day)
+ VALUES  ('Walking', 45, 240, '07:30:00', '08:15:00', '24/01/2025', '24/01/2025'),
+         ('Walking', 45, 200, '07:30:00', '08:15:00', '23/01/2025', '23/01/2025'),
+         ('Walking', 45, 30, '07:30:00', '08:15:00', '23/01/2025', '23/01/2025'),
+         ('Walking', 45, 210, '07:30:00', '08:15:00', '22/01/2025', '22/01/2025'),
+         ('Walking', 45, 200, '07:30:00', '08:15:00', '21/01/2025', '21/01/2025'),
+         ('Sitting', 45, null, '07:30:00', '08:15:00', '21/01/2025', '21/01/2025'),
+         ('Sitting', 100, null, '07:30:00', '08:15:00', '21/01/2025', '21/01/2025'),
+         ('Sitting', 60, null, '07:30:00', '08:15:00', '21/01/2025', '21/01/2025'),
+         ('Driving', 200, null, '07:30:00', '08:15:00', '21/01/2025', '21/01/2025'),
+         ('Driving', 600, null, '07:30:00', '08:15:00', '21/01/2025', '21/01/2025'),
+         ('Driving', 180, null, '07:30:00', '08:15:00', '21/01/2025', '21/01/2025'),
+
+
+
+
