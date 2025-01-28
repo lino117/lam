@@ -5,11 +5,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.text.TextUtils;
 import android.util.Log;
 
+import com.example.progettolam.struct.Filter;
 import com.example.progettolam.struct.Record;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -47,20 +50,10 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
         return id;
     }
     public Cursor getAll(SQLiteDatabase db){
-        String [] projection = {
-                activityRecordContract.RecordsEntry._ID + " AS _id",  // Alias per `_ID`
-                activityRecordContract.RecordsEntry.COLUMN_NAME,
-                activityRecordContract.RecordsEntry.COLUMN_DURATION,
-                activityRecordContract.RecordsEntry.COLUMN_STEP,
-                activityRecordContract.RecordsEntry.COLUMN_START_TIME,
-                activityRecordContract.RecordsEntry.COLUMN_START_DAY,
-                activityRecordContract.RecordsEntry.COLUMN_END_TIME,
-                activityRecordContract.RecordsEntry.COLUMN_END_DAY
-        };
         String orderBy = activityRecordContract.RecordsEntry.COLUMN_START_DAY + " DESC";
         return  db.query(
                 activityRecordContract.RecordsEntry.TABLE_NAME,
-                projection,
+                null,
                 null,
                 null,
                 null,
@@ -158,4 +151,43 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
         Log.d("tag",flag+" "+ sdf.format(day));
         return sdf.format(day);
     };
+    public Cursor getFilterCursor(SQLiteDatabase db, Filter filter) {
+        ArrayList<String> selectionArray = new ArrayList<>();
+        ArrayList<String> selectionArgsArray = new ArrayList<>();
+
+        selectionArray.add( "("+activityRecordContract.RecordsEntry.COLUMN_NAME + "= ? "+
+                "OR " + activityRecordContract.RecordsEntry.COLUMN_NAME +"= ? "+
+                "OR " + activityRecordContract.RecordsEntry.COLUMN_NAME +"= ? )");
+
+        selectionArgsArray.add(filter.getWalking());
+        selectionArgsArray.add(filter.getDriving());
+        selectionArgsArray.add(filter.getSitting());
+
+        if (!filter.getStart().isEmpty()){
+            selectionArray.add("AND "+activityRecordContract.RecordsEntry.COLUMN_START_DAY + " >= ? ");
+            selectionArgsArray.add(filter.getStart());
+        }
+        if (!filter.getEnd().isEmpty()){
+            selectionArray.add("AND "+activityRecordContract.RecordsEntry.COLUMN_END_DAY + " <= ? ");
+            selectionArgsArray.add(filter.getEnd());
+        }
+
+        String[] selection = new String[selectionArray.size()];
+        selectionArray.toArray(selection);
+
+        String[] selectionArgs = new String[selectionArgsArray.size()];
+        selectionArgsArray.toArray(selectionArgs);
+
+        String orderBy = activityRecordContract.RecordsEntry.COLUMN_START_DAY + " DESC";
+        return  db.query(
+                activityRecordContract.RecordsEntry.TABLE_NAME,
+                null,
+                TextUtils.join(" ", selection),
+                selectionArgs,
+                null,
+                null,
+                orderBy,
+                null
+        );
+    }
 }

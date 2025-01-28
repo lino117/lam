@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     tools:context=".fragment.historyFragment">
 
@@ -33,6 +34,12 @@
         android:layout_weight="2"
         >
     </ListView>
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fcv_modal_bottom_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+        />
 
 
 

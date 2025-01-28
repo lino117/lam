@@ -1,0 +1,22 @@
+private void showFilterDialog() {
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_filter, null);
+    builder.setView(dialogView);
+
+    AlertDialog dialog = builder.create();
+
+    // Gestire le azioni nel Dialog
+    Button applyButton = dialogView.findViewById(R.id.apply_button);
+    Button cancelButton = dialogView.findViewById(R.id.cancel_button);
+
+    applyButton.setOnClickListener(v -> {
+        // Esegui l'azione per applicare il filtro
+        dialog.dismiss();
+    });
+
+    cancelButton.setOnClickListener(v -> {
+        dialog.dismiss();
+    });
+
+    dialog.show();
+}

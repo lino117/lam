@@ -33,6 +33,7 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_dynamic_test_main);
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -59,8 +60,6 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
         tvTime = findViewById(R.id.tv_time);
         tvRecords = findViewById(R.id.tv_records);
         tvStatistic = findViewById(R.id.tv_statistic);
-
-
 
 
     }
@@ -102,7 +101,7 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
 
     }
 
-    @Override
+
     public void onClick(View view) {
 
         int id = view.getId();
@@ -146,4 +145,6 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
     protected void onStop() {
         super.onStop();
     }
+
+
 }

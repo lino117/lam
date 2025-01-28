@@ -3,13 +3,147 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
 
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/filter_modal_bottom_sheet"
+    <LinearLayout
+        android:id="@+id/ll_activity_filter"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
-        />
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_marginHorizontal="30dp"
+            android:layout_weight="3"
+            android:gravity="center_horizontal"
+            >
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tx_first_activity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Walking"
+                android:textSize="20sp"/>
+
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/sw_walking"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_marginHorizontal="30dp"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+
+            >
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tx_second_activity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Sitting"
+                android:textSize="20sp"/>
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/sw_Sitting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_marginHorizontal="30dp"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            >
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tx_third_activity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Driving"
+                android:textSize="20sp"/>
+
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/sw_Driving"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_time_filter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                app:prefixText="Start At: "
+                android:hint="Start Time">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/tx_start_filter"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:inputType="date"
+                    android:text="20/01/2025"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                app:prefixText="End At: "
+                android:hint="End Time"
+                android:layout_weight="1">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/tx_end_filter"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:inputType="date"
+                    android:text="24/01/2025"
+                    />
+            </com.google.android.material.textfield.TextInputLayout>
+
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_button_filter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal"
+        >
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/reset_filter_button"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Reset"
+            android:layout_marginHorizontal="50dp"/>
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/active_filter_button"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Filter"
+            android:layout_marginHorizontal="50dp"/>
+
+    </LinearLayout>
 
 </LinearLayout>

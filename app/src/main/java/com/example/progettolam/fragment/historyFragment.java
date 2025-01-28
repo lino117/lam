@@ -8,6 +8,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,13 +20,11 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.progettolam.R;
-import com.example.progettolam.database.activityRecordContract;
 import com.example.progettolam.database.activityRecordDbHelper;
 import com.example.progettolam.database.activityRecordContract.RecordsEntry;
+import com.example.progettolam.struct.Filter;
 
-import java.util.Date;
-
-public class historyFragment extends Fragment {
+public class historyFragment extends Fragment implements ModalBottomSheet.OnSentFilterListener {
 
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
@@ -37,11 +36,13 @@ public class historyFragment extends Fragment {
     public historyFragment() {
         // Required empty public constructor
     }
-
+    FragmentManager fragmentManager;
     private ListView lvHistory;
     private CursorAdapter adapter;
     private TextView txActivityDetails,txNameFeatures,txDuration,txTime;
     private ImageView ivFilter;
+    private Filter filter;
+
 
     public static historyFragment newInstance(String param1, String param2) {
         historyFragment fragment = new historyFragment();
@@ -72,18 +73,23 @@ public class historyFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initView(view);
-        initEvent();
+        initEvent(view);
     }
 
-    private void initEvent() {
+    private void initEvent(View view) {
         lvHistory.setAdapter(adapter);
         ivFilter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // dopo click, compare il pezzo che fa scegliere i campi di filtro
-                // una volta scelto il campo e clicck attivaFilter
-                // applicarlo al CursorAdpter
-                // mettere selector false
+                Fragment existingFragment = getParentFragmentManager().findFragmentByTag(ModalBottomSheet.TAG);
+
+                if (existingFragment == null || !existingFragment.isVisible()) {
+                    ModalBottomSheet modalBottomSheet = new ModalBottomSheet();
+                    modalBottomSheet.setOnSentFilterListener(historyFragment.this);
+                    modalBottomSheet.show(getParentFragmentManager(), ModalBottomSheet.TAG);
+                }
+
             }
         });
     }
@@ -94,10 +100,24 @@ public class historyFragment extends Fragment {
         db = dpHelper.getReadableDatabase();
         ivFilter=view.findViewById(R.id.iv_filter);
         lvHistory=view.findViewById(R.id.lv_history);
-//        txActivityDetails =view.findViewById(R.id.tx_activity_details);
-        adapter = new historyCursorAdapter(requireContext(), dpHelper.getAll(db), 0);
 
+        adapter = new historyCursorAdapter(requireContext(), dpHelper.getAll(db), 0);
+        adapter.setFilterQueryProvider(constraint -> {
+            if (constraint == null || constraint.length() == 0){
+                return dpHelper.getAll(db);
+            }else {
+                return dpHelper.getFilterCursor(db, filter);
+            }
+        });
     }
+
+    @Override
+    public void SentFilter(Filter passedFilter, Boolean EmptyFilter) {
+        adapter.getFilter().filter(passedFilter.toString());
+        filter = passedFilter;
+        ivFilter.setSelected(!EmptyFilter);
+    }
+
     public class historyCursorAdapter extends CursorAdapter {
 
         public historyCursorAdapter(Context context, Cursor cursor, int flags) {
@@ -132,6 +152,7 @@ public class historyFragment extends Fragment {
             txTime.setText("Start at: " + startTime + " " + startDay + " - End at: " + endTime + " " + endDay);
             txDuration.setText(String.format("%02d:%02d:%02d",duration/3600,(duration%3600)/60,(duration%60)));
         }
+
     }
 
 }

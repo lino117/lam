@@ -26,7 +26,9 @@ import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class statisticFragment extends Fragment {
 
@@ -89,21 +91,29 @@ public class statisticFragment extends Fragment {
     private void initBarChart(Cursor cursor) {
         final String title = "Step Situation";
         ArrayList<BarEntry> barEntries = new ArrayList<>();
-        ArrayList<String> giorni = new ArrayList<>();
+//        ArrayList<String> giorni = new ArrayList<>();
         ArrayList<Integer> valori = new ArrayList<>();
-            while (cursor.moveToNext()) {
-                String day = cursor.getString(cursor.getColumnIndexOrThrow("Start_Day"));
-                int steps = cursor.getInt(cursor.getColumnIndexOrThrow("total_pass"));
-                giorni.add(day);
-                valori.add(steps);
-            }
-            cursor.close();
+        while (cursor.moveToNext()) {
+            String day = cursor.getString(cursor.getColumnIndexOrThrow("Start_Day"));
+            int steps = cursor.getInt(cursor.getColumnIndexOrThrow("total_pass"));
+//            giorni.add(day);
+            valori.add(steps);
+        }
+        cursor.close();
+
+        for (int i = valori.size(); i < 7; i++) {
+            valori.add(0);
+        }
+
+        final ArrayList<String> giorni = fillWeekDates();
+
+        Log.d("barChart",valori.toString());
+        Log.d("barChart",giorni.toString());
 
         for (int i = 0; i < giorni.size(); i++) {
             barEntries.add(new BarEntry(i, valori.get(i)));
         }
         XAxis xAixs = barChart.getXAxis();
-
         xAixs.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
@@ -116,7 +126,6 @@ public class statisticFragment extends Fragment {
         BarData barData = new BarData(barDataSet);
         barChart.setData(barData);
         barChart.invalidate();
-
 
 
     }
@@ -139,13 +148,13 @@ public class statisticFragment extends Fragment {
             pieEntries.add(new PieEntry(valori.get(i), etichette.get(i)));
         }
 
-        ArrayList<Integer> colors  = new ArrayList<>();
+        ArrayList<Integer> colors = new ArrayList<>();
         colors.add(requireContext().getColor(R.color.purple));
         colors.add(requireContext().getColor(R.color.light_blue));
         colors.add(requireContext().getColor(R.color.grey));
 
 
-        PieDataSet pieDataSet = new PieDataSet(pieEntries,"Monthly Activity");
+        PieDataSet pieDataSet = new PieDataSet(pieEntries, "Monthly Activity");
 
         pieDataSet.setDrawIcons(false);
         pieDataSet.setColors(colors);
@@ -161,5 +170,24 @@ public class statisticFragment extends Fragment {
         super.onDestroy();
         dpHelper.close();
         db.close();
+    }
+
+    public ArrayList<String> fillWeekDates() {
+        ArrayList<String> giorni = new ArrayList<>();
+        // Ottieni l'oggetto Calendar impostato alla data corrente
+        Calendar calendar = Calendar.getInstance();
+
+        // Trova il primo giorno della settimana (Lunedì)
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+
+        // Formattatore per la data
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM");
+
+        // Riempie l'array con le date della settimana
+        for (int i = 0; i < 7; i++) {
+            giorni.add(dateFormat.format(calendar.getTime()));
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        return giorni;
     }
 }
