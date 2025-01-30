@@ -1,11 +1,24 @@
 package com.example.progettolam.fragment;
 
+import static androidx.core.content.ContextCompat.getSystemService;
+
+import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.util.Log;
@@ -35,16 +48,19 @@ public class statisticFragment extends Fragment {
 
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+    private static final String CHANNEL_ID = "periodic_messsage";
+    private static final int PERMISSION_REQUEST_POST_NOTIFICATIONS = 1;
     private BarChart barChart;
     private PieChart pieChart;
     activityRecordDbHelper dpHelper;
     SQLiteDatabase db;
+    NotificationManagerCompat nm;
     private String mParam1;
     private String mParam2;
 
     public statisticFragment() {
         // Required empty public constructor
-    }
+    }   
 
 
     public static statisticFragment newInstance(String param1, String param2) {
@@ -73,11 +89,22 @@ public class statisticFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_statistic, container, false);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         barChart = view.findViewById(R.id.bar_chart);
         pieChart = view.findViewById(R.id.pie_chart);
+
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED) {
+            initNotification();
+        } else {
+            // Richiedi il permesso
+            ActivityCompat.requestPermissions(requireActivity(),
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    PERMISSION_REQUEST_POST_NOTIFICATIONS);
+        }
 
         dpHelper = new activityRecordDbHelper(requireContext());
 
@@ -86,6 +113,50 @@ public class statisticFragment extends Fragment {
         initPieChart(dpHelper.getMonthlyActivity(db));
 
         initBarChart(dpHelper.getWeeklySteps(db));
+    }
+
+    private void initNotification() {
+        nm = NotificationManagerCompat.from(requireContext());
+        createNotificationChannel();
+        periodicNotification();
+    }
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is not in the Support Library.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.channel_name);
+            String description = getString(R.string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this.
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+    private void periodicNotification(){
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), CHANNEL_ID)
+                .setSmallIcon(R.drawable.notif_icon)
+                .setContentTitle("ciaos")
+                .setContentText("textContent")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true);
+
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            ActivityCompat.requestPermissions(requireActivity(),
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    PERMISSION_REQUEST_POST_NOTIFICATIONS);
+            return;
+        }
+        nm.notify(666,builder.build());
     }
 
     private void initBarChart(Cursor cursor) {
@@ -164,14 +235,12 @@ public class statisticFragment extends Fragment {
         pieChart.invalidate();
     }
 
-
     @Override
     public void onDestroy() {
         super.onDestroy();
         dpHelper.close();
         db.close();
     }
-
     public ArrayList<String> fillWeekDates() {
         ArrayList<String> giorni = new ArrayList<>();
         // Ottieni l'oggetto Calendar impostato alla data corrente

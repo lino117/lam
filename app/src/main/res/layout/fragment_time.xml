@@ -45,7 +45,7 @@
             android:layout_height="50dp"
             android:layout_weight="1"
             android:textSize="20sp"
-            android:entries="@array/activitys_list"
+            android:entries="@array/activitys"
             />
     </LinearLayout>
 
@@ -81,6 +81,63 @@
             android:hint="@string/qua_sono_gli_step"
             />
     </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal"
+        >
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            >
 
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tx_notification"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/periodicControll"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Notification Off"
+                />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tx_transition"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/trasitionControll"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="transition Off"
+            />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_send_testIntent"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Send Test Intent"
+            />
+        </LinearLayout>
+
+    </LinearLayout>
 
 </LinearLayout>

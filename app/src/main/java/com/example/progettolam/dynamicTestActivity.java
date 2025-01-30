@@ -17,15 +17,15 @@ import androidx.fragment.app.FragmentTransaction;
 import com.example.progettolam.fragment.homeFragment;
 import com.example.progettolam.fragment.historyFragment;
 import com.example.progettolam.fragment.statisticFragment;
+import com.example.progettolam.transition.UserActivityDetectionService;
 
 public class dynamicTestActivity extends AppCompatActivity implements View.OnClickListener {
 
     private LinearLayout llTime, llRecords, llStatistic;
     private ImageView ivTime, ivRecords, ivStatistic;
-    private TextView tvTime, tvRecords, tvStatistic, tvActiviting;
+    private TextView tvTime, tvRecords, tvStatistic;
 
     FragmentManager fragmentManager;
-
 
 
     @Override
@@ -40,13 +40,8 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
             return insets;
         });
 
-//        dpHelper = new activityRecordDbHelper(this);
         initView();
         initEvent();
-
-
-
-
     }
     private void initView() {
         llTime = findViewById(R.id.ll_time);
@@ -60,7 +55,6 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
         tvTime = findViewById(R.id.tv_time);
         tvRecords = findViewById(R.id.tv_records);
         tvStatistic = findViewById(R.id.tv_statistic);
-
 
     }
     private void initEvent() {
@@ -77,7 +71,6 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
         llTime.setOnClickListener(this);
         llRecords.setOnClickListener(this);
         llStatistic.setOnClickListener(this);
-
     }
     private void resetBottomNavItem() {
         ivTime.setSelected(false);
@@ -100,7 +93,6 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
         }
 
     }
-
 
     public void onClick(View view) {
 

@@ -74,6 +74,7 @@ public class historyFragment extends Fragment implements ModalBottomSheet.OnSent
         super.onViewCreated(view, savedInstanceState);
         initView(view);
         initEvent(view);
+
     }
 
     private void initEvent(View view) {

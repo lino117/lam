@@ -6,16 +6,17 @@
     <string name="cmeter_pause">Pause</string>
     <string name="cmeter_continue">Continue</string>
     <string name="activity_hint">Choose your activity</string>
-    <string-array name="activitys_list">
+    <string-array name="activitys">
         <item>Walking</item>
         <item>Driving</item>
         <item>Sitting</item>
+        <item>Unknown</item>
     </string-array>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="records">Records</string>
     <string name="home">Home</string>
     <string name="start">Start</string>
     <string name="statistic">statistic</string>
     <string name="qua_sono_gli_step">Qua sono gli step</string>
+    <string name="channel_name">periodic_not</string>
+    <string name="channel_description">keep walking</string>
 </resources>
