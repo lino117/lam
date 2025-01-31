@@ -4,11 +4,11 @@ public class Record {
     private String nameActivity;
     private Integer duration;
     private Integer step;
-    private String startDay;
+    private Long startDay;
 
-    private String startTime;
-    private String endTime;
-    private String endDay;
+    private Long startTime;
+    private Long endTime;
+    private Long endDay;
 
 
 
@@ -36,35 +36,35 @@ public class Record {
         this.step = step;
     }
 
-    public String getStartDay() {
-        return startDay;
-    }
-
-    public void setStartDay(String startDay) {
-        this.startDay = startDay;
-    }
-
-    public String getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(String startTime) {
-        this.startTime = startTime;
-    }
-
-    public String getEndTime() {
+    public Long getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(String endTime) {
+    public void setEndTime(Long endTime) {
         this.endTime = endTime;
     }
 
-    public String getEndDay() {
+    public Long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Long startTime) {
+        this.startTime = startTime;
+    }
+
+    public Long getStartDay() {
+        return startDay;
+    }
+
+    public void setStartDay(Long startDay) {
+        this.startDay = startDay;
+    }
+
+    public Long getEndDay() {
         return endDay;
     }
 
-    public void setEndDay(String endDay) {
+    public void setEndDay(Long endDay) {
         this.endDay = endDay;
     }
 

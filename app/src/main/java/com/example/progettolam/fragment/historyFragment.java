@@ -18,11 +18,15 @@ import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.progettolam.R;
 import com.example.progettolam.database.activityRecordDbHelper;
 import com.example.progettolam.database.activityRecordContract.RecordsEntry;
 import com.example.progettolam.struct.Filter;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class historyFragment extends Fragment implements ModalBottomSheet.OnSentFilterListener {
 
@@ -102,14 +106,19 @@ public class historyFragment extends Fragment implements ModalBottomSheet.OnSent
         ivFilter=view.findViewById(R.id.iv_filter);
         lvHistory=view.findViewById(R.id.lv_history);
 
-        adapter = new historyCursorAdapter(requireContext(), dpHelper.getAll(db), 0);
-        adapter.setFilterQueryProvider(constraint -> {
-            if (constraint == null || constraint.length() == 0){
-                return dpHelper.getAll(db);
-            }else {
-                return dpHelper.getFilterCursor(db, filter);
-            }
-        });
+        if( dpHelper.getAll(db).moveToNext()){
+            adapter = new historyCursorAdapter(requireContext(), dpHelper.getAll(db), 0);
+            adapter.setFilterQueryProvider(constraint -> {
+                if (constraint == null || constraint.length() == 0){
+                    return dpHelper.getAll(db);
+                }else {
+                    return dpHelper.getFilterCursor(db, filter);
+                }
+            });
+        }else {
+            Toast.makeText(requireContext(),"non dati presenti",Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     @Override
@@ -133,6 +142,8 @@ public class historyFragment extends Fragment implements ModalBottomSheet.OnSent
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+            SimpleDateFormat dayFormat = new SimpleDateFormat("dd/MM/yyyy");
             txNameFeatures=view.findViewById(R.id.tx_name_features);
             txDuration=view.findViewById(R.id.tx_duration);
             txTime=view.findViewById(R.id.tx_time);
@@ -140,17 +151,22 @@ public class historyFragment extends Fragment implements ModalBottomSheet.OnSent
             String activityName = cursor.getString(cursor.getColumnIndexOrThrow(RecordsEntry.COLUMN_NAME));
             int duration = cursor.getInt(cursor.getColumnIndexOrThrow(RecordsEntry.COLUMN_DURATION));
             int step = cursor.getInt(cursor.getColumnIndexOrThrow(RecordsEntry.COLUMN_STEP));
-            String startTime = cursor.getString(cursor.getColumnIndexOrThrow(RecordsEntry.COLUMN_START_TIME));
-            String endTime = cursor.getString(cursor.getColumnIndexOrThrow(RecordsEntry.COLUMN_END_TIME));
-            String startDay = cursor.getString(cursor.getColumnIndexOrThrow(RecordsEntry.COLUMN_START_DAY));
-            String endDay = cursor.getString(cursor.getColumnIndexOrThrow(RecordsEntry.COLUMN_END_DAY));
+            long startTime = cursor.getLong(cursor.getColumnIndexOrThrow(RecordsEntry.COLUMN_START_TIME));
+            long endTime = cursor.getLong(cursor.getColumnIndexOrThrow(RecordsEntry.COLUMN_END_TIME));
+            long startDay = cursor.getLong(cursor.getColumnIndexOrThrow(RecordsEntry.COLUMN_START_DAY));
+            long endDay = cursor.getLong(cursor.getColumnIndexOrThrow(RecordsEntry.COLUMN_END_DAY));
             Log.d("tag", startDay +" "+ startTime);
             if (activityName.equals("Walking")) {
                 txNameFeatures.setText(String.format("%s - %d steps", activityName, step));
             } else {
                 txNameFeatures.setText(activityName);
             }
-            txTime.setText("Start at: " + startTime + " " + startDay + " - End at: " + endTime + " " + endDay);
+
+            txTime.setText("Start at: " + timeFormat.format(new Date(startTime)) +
+                    " " + dayFormat.format(new Date(startDay)) +
+                    " - End at: " + timeFormat.format(new Date(endTime)) +
+                    " " + dayFormat.format(new Date(endDay)));
+
             txDuration.setText(String.format("%02d:%02d:%02d",duration/3600,(duration%3600)/60,(duration%60)));
         }
 

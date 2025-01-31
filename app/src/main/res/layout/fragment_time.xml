@@ -81,6 +81,21 @@
             android:hint="@string/qua_sono_gli_step"
             />
     </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_vertical">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_send_testIntent"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Send Test Intent"
+            />
+    </LinearLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="100dp"
@@ -125,18 +140,6 @@
 
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_send_testIntent"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="Send Test Intent"
-            />
-        </LinearLayout>
 
     </LinearLayout>
 

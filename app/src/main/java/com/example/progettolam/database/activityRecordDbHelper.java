@@ -74,8 +74,8 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
         String selection =  activityRecordContract.RecordsEntry.COLUMN_START_DAY + " >= ? " +
                 "AND " + activityRecordContract.RecordsEntry.COLUMN_START_DAY + " <= ?";
         String[] selectionArgs = {
-                getArgsDay("fMonth"),
-                getArgsDay("lMonth")
+                String.valueOf(getArgsDay("fMonth")),
+                String.valueOf(getArgsDay("lMonth"))
         };
 
         String groupBy = activityRecordContract.RecordsEntry.COLUMN_NAME;
@@ -104,11 +104,14 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
         String selection =  activityRecordContract.RecordsEntry.COLUMN_START_DAY + " >= ? " +
                 "AND " + activityRecordContract.RecordsEntry.COLUMN_START_DAY + " <= ? " +
                 "AND " + activityRecordContract.RecordsEntry.COLUMN_NAME + " = ? ";
+        long fWeek = getArgsDay("fWeek");
+        long lWeek = getArgsDay("lWeek");
+        Log.d("barCHart",Long.toString(fWeek));
         String[] selectionArgs = {
-                getArgsDay("fWeek"),
-                getArgsDay("lWeek"),
-//                "20/01/2025",
-//                "26/01/2025",
+                Long.toString(fWeek),
+                Long.toString(lWeek),
+//                "27/01/2025",
+//                "01/02/2025",
                 "Walking"
         };
 
@@ -126,7 +129,7 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
         );
 
     }
-    private String getArgsDay(String  flag) {
+    private Long getArgsDay(String  flag) {
         // Ottieni l'istanza di Calendar
         Calendar calendar = Calendar.getInstance();
         calendar.setFirstDayOfWeek(Calendar.MONDAY);
@@ -148,8 +151,8 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
                 break;
         }
         Date day = calendar.getTime();
-        Log.d("tag",flag+" "+ sdf.format(day));
-        return sdf.format(day);
+        Log.d("barChart",flag + " "+ day);
+        return day.getTime();
     };
     public Cursor getFilterCursor(SQLiteDatabase db, Filter filter) {
         ArrayList<String> selectionArray = new ArrayList<>();

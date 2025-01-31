@@ -260,10 +260,8 @@ public class homeFragment extends Fragment implements SensorEventListener {
     private Record createRecord(long currentTime, long relativeTime) {
         long duration = correctBias(relativeTime);
         long startTime = currentTime - duration;
-
-        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-        SimpleDateFormat dayFormat = new SimpleDateFormat("dd/MM/yyyy");
-
+//        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+//        SimpleDateFormat dayFormat = new SimpleDateFormat("dd/MM/yyyy");
         Record record = new Record();
         record.setNameActivity(selectedActivity);
         record.setDuration((int) (duration / 1000));
@@ -272,10 +270,10 @@ public class homeFragment extends Fragment implements SensorEventListener {
         }else {
             record.setStep(null);
         }
-        record.setStartTime(timeFormat.format(new Date(startTime)));
-        record.setEndTime(timeFormat.format(new Date(currentTime)));
-        record.setStartDay(dayFormat.format(new Date(startTime)));
-        record.setEndDay(dayFormat.format(new Date(currentTime)));
+        record.setStartTime(startTime);
+        record.setEndTime(currentTime);
+        record.setStartDay(startTime);
+        record.setEndDay(currentTime);
         Log.d("ActivityRecognition",record.toString()+finalNumSteps);
         return record;
     }
@@ -363,11 +361,10 @@ public class homeFragment extends Fragment implements SensorEventListener {
     public void onDestroyView() {
         super.onDestroyView();
         switchNotification();
-        switchTransition();
+//        switchTransition();
     }
 
     public void sendTestIntent(View view) {
-        Log.d("ActivityRecognition","dentro sendTestIntent");
         Intent testIntent = new Intent(requireContext(), UserActivityDetectionReceiver.class);
         testIntent.setAction("com.google.android.gms.location.ACTIVITY_TRANSITION"); // Assicurati che l'azione corrisponda
         requireContext().sendBroadcast(testIntent);

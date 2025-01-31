@@ -12,6 +12,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.LongDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -42,6 +43,7 @@ import com.github.mikephil.charting.formatter.ValueFormatter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 
 public class statisticFragment extends Fragment {
 
@@ -162,26 +164,30 @@ public class statisticFragment extends Fragment {
     private void initBarChart(Cursor cursor) {
         final String title = "Step Situation";
         ArrayList<BarEntry> barEntries = new ArrayList<>();
-//        ArrayList<String> giorni = new ArrayList<>();
         ArrayList<Integer> valori = new ArrayList<>();
+        final ArrayList<Long> giorniMsec = fillWeekDates();
+        int counter = 0;
         while (cursor.moveToNext()) {
-            String day = cursor.getString(cursor.getColumnIndexOrThrow("Start_Day"));
+            long day = cursor.getLong(cursor.getColumnIndexOrThrow("Start_Day"));
+            while (counter < giorniMsec.size() && giorniMsec.get(counter) < day) {
+                valori.add(0);
+                counter++;
+            }
             int steps = cursor.getInt(cursor.getColumnIndexOrThrow("total_pass"));
-//            giorni.add(day);
             valori.add(steps);
         }
         cursor.close();
-
-        for (int i = valori.size(); i < 7; i++) {
+        while (counter<giorniMsec.size()){
             valori.add(0);
+            counter++;
         }
+        ArrayList<String> giorni = convertLongToString(giorniMsec);
 
-        final ArrayList<String> giorni = fillWeekDates();
+//        Log.d("barChart", String.valueOf(valori.size()) + " valore counter"+counter);
+//        Log.d("barChart", valori.toString());
+//        Log.d("barChart",giorniMsec.toString());
 
-        Log.d("barChart",valori.toString());
-        Log.d("barChart",giorni.toString());
-
-        for (int i = 0; i < giorni.size(); i++) {
+        for (int i = 0; i < giorniMsec.size(); i++) {
             barEntries.add(new BarEntry(i, valori.get(i)));
         }
         XAxis xAixs = barChart.getXAxis();
@@ -199,6 +205,15 @@ public class statisticFragment extends Fragment {
         barChart.invalidate();
 
 
+    }
+
+    private ArrayList<String> convertLongToString(ArrayList<Long> giorniMsec) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM");
+        ArrayList<String> giorni = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            giorni.add(dateFormat.format(new Date(giorniMsec.get(i))));
+        }
+        return giorni;
     }
 
     private void initPieChart(Cursor cursor) {
@@ -241,8 +256,8 @@ public class statisticFragment extends Fragment {
         dpHelper.close();
         db.close();
     }
-    public ArrayList<String> fillWeekDates() {
-        ArrayList<String> giorni = new ArrayList<>();
+    public ArrayList<Long> fillWeekDates() {
+        ArrayList<Long> giorni = new ArrayList<>();
         // Ottieni l'oggetto Calendar impostato alla data corrente
         Calendar calendar = Calendar.getInstance();
 
@@ -254,7 +269,7 @@ public class statisticFragment extends Fragment {
 
         // Riempie l'array con le date della settimana
         for (int i = 0; i < 7; i++) {
-            giorni.add(dateFormat.format(calendar.getTime()));
+            giorni.add(calendar.getTime().getTime());
             calendar.add(Calendar.DAY_OF_MONTH, 1);
         }
         return giorni;
