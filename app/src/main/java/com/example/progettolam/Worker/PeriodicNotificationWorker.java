@@ -48,7 +48,7 @@ public class PeriodicNotificationWorker extends Worker {
         // Indicate whether the work finished successfully with the Result
         return Result.success();
     }
-    private void createNotificationChannel() {
+    public void createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is not in the Support Library.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

@@ -1,15 +1,18 @@
 package com.example.progettolam.fragment;
 
+import static androidx.core.content.ContextCompat.registerReceiver;
+
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.service.notification.StatusBarNotification;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,7 +28,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatTextView;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -37,17 +39,14 @@ import com.example.progettolam.R;
 import com.example.progettolam.Worker.PeriodicNotificationWorker;
 import com.example.progettolam.database.activityRecordDbHelper;
 import com.example.progettolam.struct.Record;
+//import com.example.progettolam.transition.HWDetectionService;
 import com.example.progettolam.transition.UserActivityDetectionReceiver;
 import com.example.progettolam.transition.UserActivityDetectionService;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.materialswitch.MaterialSwitch;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class homeFragment extends Fragment implements SensorEventListener {
@@ -69,11 +68,14 @@ public class homeFragment extends Fragment implements SensorEventListener {
     private AppCompatTextView txNotification, txTransition;
 
     private SensorManager sensorManager;
+    UserActivityDetectionReceiver userActivityDetectionReceiver;
+//    HWDetectionService hwDetectionService;
     private Sensor stepSensor;
     private long stepsAtStart;
     private long numberSteps;
     private long finalNumSteps;
     private UserActivityDetectionService userActivityDetectionService;
+    private SQLiteDatabase db;
 
     public homeFragment() {
         // Required empty public constructor
@@ -114,8 +116,24 @@ public class homeFragment extends Fragment implements SensorEventListener {
     }
 
     private void initActivityDetection() {
+        String TRANSITIONS_RECEIVER_ACTION = "com.example.progettolam.transition.TRANSITIONS_RECEIVER_ACTION";
+//        String ACTION_PROCESS_LOCATION = "com.huawei.hms.location.ACTION_PROCESS_LOCATION";
+
         userActivityDetectionService = new UserActivityDetectionService(requireContext());
-        userActivityDetectionService.startActivityUpdates(userActivityDetectionService.buildTransitionRequest());
+        Intent intent = new Intent(TRANSITIONS_RECEIVER_ACTION);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        userActivityDetectionService.startActivityUpdates(userActivityDetectionService.buildTransitionRequest(),pendingIntent);
+
+//        hwDetectionService = new HWDetectionService(requireContext());
+//        Intent intent = new Intent(ACTION_PROCESS_LOCATION);
+//        PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
+//        hwDetectionService.startActivityRecognition(hwDetectionService.buildTransitionRequest(),pendingIntent);
+
+//        userActivityDetectionReceiver = new UserActivityDetectionReceiver();
+//        registerReceiver(requireContext(), userActivityDetectionReceiver, new IntentFilter(TRANSITIONS_RECEIVER_ACTION), ContextCompat.RECEIVER_NOT_EXPORTED);
+//        registerReceiver(requireContext(), userActivityDetectionReceiver, new IntentFilter(ACTION_PROCESS_LOCATION), ContextCompat.RECEIVER_NOT_EXPORTED);
+
+
         txTransition.setText("Transition On");
         btnTransition.setText("Click to switch off");
     }
@@ -160,7 +178,9 @@ public class homeFragment extends Fragment implements SensorEventListener {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS)
                 == PackageManager.PERMISSION_GRANTED) {
 
-            initPeriodicNotification();
+//            initPeriodicNotification();
+            btnNotification.setText("Click to switch on");
+            txNotification.setText("Notification is Off");
         } else {
             ActivityCompat.requestPermissions(requireActivity(),
                     new String[]{Manifest.permission.POST_NOTIFICATIONS},
@@ -177,7 +197,7 @@ public class homeFragment extends Fragment implements SensorEventListener {
         WorkManager.getInstance(requireContext()).
                 enqueueUniquePeriodicWork(
                         "notification_work",
-                        ExistingPeriodicWorkPolicy.KEEP,
+                        ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
                         periodicWorkRequest);
         txNotification.setText("Notification is On");
 
@@ -221,6 +241,8 @@ public class homeFragment extends Fragment implements SensorEventListener {
             if (sensorManager != null) {
                 sensorManager.unregisterListener(this);
             }
+            Log.d("ActivityRecognition pass","dentro pause final->"+finalNumSteps+"step-> "+numberSteps);
+
             // registra passo fatto
             finalNumSteps += numberSteps;
             // inizia valori
@@ -242,12 +264,8 @@ public class homeFragment extends Fragment implements SensorEventListener {
             if (sensorManager != null) {
                 sensorManager.unregisterListener(this);
             }
-            // registra passo fatto
-            finalNumSteps += numberSteps;
-
+//            db = dbHelper.getWritableDatabase();
             long newRowID = dbHelper.insertData(record);
-            // inizializza tutti i valori dopo aver inserito i dati
-            stepsAtStart = numberSteps = finalNumSteps =0;
 
             if (newRowID != -1) {
                 Toast.makeText(requireContext(), record.toString(), Toast.LENGTH_LONG).show();
@@ -260,6 +278,7 @@ public class homeFragment extends Fragment implements SensorEventListener {
     private Record createRecord(long currentTime, long relativeTime) {
         long duration = correctBias(relativeTime);
         long startTime = currentTime - duration;
+        finalNumSteps+=numberSteps;
 //        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 //        SimpleDateFormat dayFormat = new SimpleDateFormat("dd/MM/yyyy");
         Record record = new Record();
@@ -270,14 +289,29 @@ public class homeFragment extends Fragment implements SensorEventListener {
         }else {
             record.setStep(null);
         }
-        record.setStartTime(startTime);
-        record.setEndTime(currentTime);
-        record.setStartDay(startTime);
-        record.setEndDay(currentTime);
-        Log.d("ActivityRecognition",record.toString()+finalNumSteps);
+
+        record.setStart_time(startTime % 86400000);
+        record.setEnd_time(currentTime % 86400000 );
+        record.setStart_day(setDay(startTime) );
+        record.setEnd_day(setDay(currentTime));
+
+        stepsAtStart = numberSteps = finalNumSteps = 0;
         return record;
     }
+    private Long setDay(Long  time) {
 
+        // Crea un oggetto Calendar e imposta il tempo
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(time);
+
+        // Azzerare le ore, i minuti, i secondi e i millisecondi
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        Log.d("day",(int)(calendar.getTimeInMillis()) +"   "+calendar.getTimeInMillis());
+        return calendar.getTimeInMillis();
+    };
     private long correctBias(long relativeTime) {
         final String text = chronometer.getText().toString();
         final int bias = Character.getNumericValue(text.charAt(4));
@@ -307,20 +341,19 @@ public class homeFragment extends Fragment implements SensorEventListener {
     }
     @Override
     public void onSensorChanged(SensorEvent event) {
-        Log.d("tag","dentro on change di register qua clash");
+
         if (event != null && event.sensor.getType() == Sensor.TYPE_STEP_COUNTER) {
 
             if (chronometer.isActivated()) {
                 // stepsAtStart = 0 quindi assegno quello corrente, ovvero event.valus[0]
                 if (stepsAtStart == 0) {
                     stepsAtStart = (long) event.values[0];
-
                 }
-
                 // ogni volta che cambia, registra quanti passi son stati fatti
                 numberSteps = (long) event.values[0] - stepsAtStart;
-                tvStep.setText(String.valueOf(numberSteps));
 
+                long displaySteps = finalNumSteps + numberSteps;
+                tvStep.setText(String.valueOf(displaySteps));
             }
         }
     }
@@ -332,6 +365,8 @@ public class homeFragment extends Fragment implements SensorEventListener {
 
     private void switchTransition() {
         userActivityDetectionService.stopActivityUpdates();
+        txTransition.setText("Transition is Off");
+        btnTransition.setText("restart to switch On");
     }
 
     public void switchNotification() {
@@ -346,12 +381,12 @@ public class homeFragment extends Fragment implements SensorEventListener {
                     btnNotification.setText("Click to switch on");
                     txNotification.setText("Notification is Off");
                 } else {
-
                     initPeriodicNotification();
                 }
-            } else {
-                initPeriodicNotification();
             }
+//            else {
+//                initPeriodicNotification();
+//            }
             } catch(ExecutionException | InterruptedException e){
                 throw new RuntimeException(e);
             }
@@ -362,6 +397,7 @@ public class homeFragment extends Fragment implements SensorEventListener {
         super.onDestroyView();
         switchNotification();
 //        switchTransition();
+//        requireContext().unregisterReceiver(userActivityDetectionReceiver);
     }
 
     public void sendTestIntent(View view) {

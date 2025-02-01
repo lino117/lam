@@ -34,9 +34,14 @@
         <receiver android:name=".transition.UserActivityDetectionReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.google.android.gms.location.ACTIVITY_TRANSITION" />
+                <action android:name="com.example.progettolam.transition.TRANSITIONS_RECEIVER_ACTION" />
             </intent-filter>
         </receiver>
+
+<!--        <service-->
+<!--            android:name="com.huawei.hms.location.ActivityIdentificationService"-->
+<!--            android:exported="false"/>-->
+
     </application>
 
 </manifest>

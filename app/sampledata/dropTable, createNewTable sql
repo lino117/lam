@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS records;
 
 
  CREATE TABLE records (
-                    BaseColumns._ID INTEGER PRIMARY KEY,
+                    _id INTEGER PRIMARY KEY,
                     Activity_Name TEXT,
                     Duration INTEGER,
                     Step INTEGER,
@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS records;
                     Start_Day LONG,
                     End_Time LONG,
                     End_Day LONG)
+
 
 
  INSERT INTO records (Activity_Name, Duration, Step, Start_Time, End_Time, Start_Day, End_Day)
@@ -22,6 +23,8 @@ DROP TABLE IF EXISTS records;
            ('Sitting', 45, null, 27000000, 29700000, 1737936000000, 1737936000000),
             ('Driving', 45, null, 27000000, 29700000, 1738022400000, 1738022400000),
             ('Driving', 45, null,  27000000, 29700000, 1738108800000, 1738108800000);
+
+
 
 
 

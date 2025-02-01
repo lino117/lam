@@ -41,10 +41,10 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
         values.put(activityRecordContract.RecordsEntry.COLUMN_NAME, record.getNameActivity());
         values.put(activityRecordContract.RecordsEntry.COLUMN_DURATION, record.getDuration());
         values.put(activityRecordContract.RecordsEntry.COLUMN_STEP, record.getStep());
-        values.put(activityRecordContract.RecordsEntry.COLUMN_START_DAY, record.getStartDay());
-        values.put(activityRecordContract.RecordsEntry.COLUMN_START_TIME, record.getStartTime());
-        values.put(activityRecordContract.RecordsEntry.COLUMN_END_DAY, record.getEndDay());
-        values.put(activityRecordContract.RecordsEntry.COLUMN_END_TIME, record.getEndTime());
+        values.put(activityRecordContract.RecordsEntry.COLUMN_START_DAY, record.getStart_day());
+        values.put(activityRecordContract.RecordsEntry.COLUMN_START_TIME, record.getStart_time());
+        values.put(activityRecordContract.RecordsEntry.COLUMN_END_DAY, record.getEnd_day());
+        values.put(activityRecordContract.RecordsEntry.COLUMN_END_TIME, record.getEnd_time());
         long id = db.insert(activityRecordContract.RecordsEntry.TABLE_NAME,null,values);
         db.close();
         return id;
@@ -74,8 +74,8 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
         String selection =  activityRecordContract.RecordsEntry.COLUMN_START_DAY + " >= ? " +
                 "AND " + activityRecordContract.RecordsEntry.COLUMN_START_DAY + " <= ?";
         String[] selectionArgs = {
-                String.valueOf(getArgsDay("fMonth")),
-                String.valueOf(getArgsDay("lMonth"))
+                Long.toString(getArgsDay("fMonth")),
+                Long.toString(getArgsDay("lMonth"))
         };
 
         String groupBy = activityRecordContract.RecordsEntry.COLUMN_NAME;
@@ -106,7 +106,7 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
                 "AND " + activityRecordContract.RecordsEntry.COLUMN_NAME + " = ? ";
         long fWeek = getArgsDay("fWeek");
         long lWeek = getArgsDay("lWeek");
-        Log.d("barCHart",Long.toString(fWeek));
+
         String[] selectionArgs = {
                 Long.toString(fWeek),
                 Long.toString(lWeek),
@@ -133,7 +133,6 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
         // Ottieni l'istanza di Calendar
         Calendar calendar = Calendar.getInstance();
         calendar.setFirstDayOfWeek(Calendar.MONDAY);
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
         switch (flag){
             case "fMonth":
@@ -150,9 +149,16 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
                 calendar.add(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
                 break;
         }
+        // Imposta (00:00:00.000)
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
         Date day = calendar.getTime();
         Log.d("barChart",flag + " "+ day);
-        return day.getTime();
+        // ritorna una data con un ora in meno per fuso orario
+        return day.getTime() - 3600000;
     };
     public Cursor getFilterCursor(SQLiteDatabase db, Filter filter) {
         ArrayList<String> selectionArray = new ArrayList<>();

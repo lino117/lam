@@ -44,6 +44,11 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation (libs.mpandroidchart)
     implementation (libs.play.services.location.v2101)
+//    implementation (libs.ucs.credential.developers)
+//    implementation (libs.location)
+//    implementation (libs.base)
+    // Sostituisci con la versione disponibile
+
 
 //    implementation(libs.play.services.activity.recognition)
 

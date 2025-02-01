@@ -13,9 +13,11 @@ public class activityRecordContract {
         public static final String COLUMN_NAME = "Activity_Name";
         public static final String COLUMN_DURATION = "Duration";
         public static final String COLUMN_STEP = "Step";
+//        public static final String COLUMN_START = "Start";
         public static final String COLUMN_START_TIME = "Start_Time";
-        public static final String COLUMN_END_TIME = "End_Time";
         public static final String COLUMN_START_DAY = "Start_Day";
+//        public static final String COLUMN_END ="End";
+        public static final String COLUMN_END_TIME ="End_Time";
         public static final String COLUMN_END_DAY ="End_Day";
     }
     public static final String SQL_CREATE_ENTRIES =
@@ -24,10 +26,12 @@ public class activityRecordContract {
                     RecordsEntry.COLUMN_NAME + " TEXT," +
                     RecordsEntry.COLUMN_DURATION + " INTEGER," +
                     RecordsEntry.COLUMN_STEP + " INTEGER," +
-                    RecordsEntry.COLUMN_START_TIME + " STRING," +
-                    RecordsEntry.COLUMN_START_DAY + " STRING," +
-                    RecordsEntry.COLUMN_END_TIME + " STRING," +
-                    RecordsEntry.COLUMN_END_DAY + " STRING)" ;
+                    RecordsEntry.COLUMN_START_TIME + " INTEGER," +
+                    RecordsEntry.COLUMN_END_TIME  + " INTEGER)" +
+                    RecordsEntry.COLUMN_START_DAY + " INTEGER," +
+                    RecordsEntry.COLUMN_END_DAY + " INTEGER)" ;
+//                    RecordsEntry.COLUMN_START + " TEXT," +
+//                    RecordsEntry.COLUMN_END + " TEXT)" ;
 
     public static final String SQL_DELETE_ENTRIES =
             "DROP TABLE IF EXISTS " + RecordsEntry.TABLE_NAME;

@@ -23,12 +23,13 @@ import java.util.List;
 public class UserActivityDetectionService {
     private final ActivityRecognitionClient activityRecognitionClient;
     private final PendingIntent pendingIntent;
+    private final String Costum_Intent_Action = "com.example.progettolam.transition.TRANSITIONS_RECEIVER_ACTION";
 
     public UserActivityDetectionService(Context context) {
         activityRecognitionClient = ActivityRecognition.getClient(context);
-        Intent intent = new Intent(context, UserActivityDetectionReceiver.class);
-        intent.setAction("com.google.android.gms.location.ACTIVITY_TRANSITION");
-        pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_MUTABLE);
+        Intent intent = new Intent(Costum_Intent_Action);
+//        intent.setAction("com.google.android.gms.location.ACTIVITY_TRANSITION");
+        pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
     }
     public ActivityTransitionRequest buildTransitionRequest() {
         List<ActivityTransition> transitions = new ArrayList<>();
@@ -68,8 +69,8 @@ public class UserActivityDetectionService {
     }
 
     @SuppressLint("MissingPermission")
-    public void startActivityUpdates(ActivityTransitionRequest request) {
-        activityRecognitionClient.requestActivityTransitionUpdates(request, pendingIntent)
+    public void startActivityUpdates(ActivityTransitionRequest request, PendingIntent pendingIntents) {
+        activityRecognitionClient.requestActivityTransitionUpdates(request, pendingIntents)
 
         .addOnSuccessListener(
                new OnSuccessListener<Void>() {

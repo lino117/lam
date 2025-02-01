@@ -44,6 +44,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 public class statisticFragment extends Fragment {
 
@@ -98,16 +99,6 @@ public class statisticFragment extends Fragment {
         barChart = view.findViewById(R.id.bar_chart);
         pieChart = view.findViewById(R.id.pie_chart);
 
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS)
-                == PackageManager.PERMISSION_GRANTED) {
-            initNotification();
-        } else {
-            // Richiedi il permesso
-            ActivityCompat.requestPermissions(requireActivity(),
-                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                    PERMISSION_REQUEST_POST_NOTIFICATIONS);
-        }
-
         dpHelper = new activityRecordDbHelper(requireContext());
 
         db = dpHelper.getReadableDatabase();
@@ -117,77 +108,41 @@ public class statisticFragment extends Fragment {
         initBarChart(dpHelper.getWeeklySteps(db));
     }
 
-    private void initNotification() {
-        nm = NotificationManagerCompat.from(requireContext());
-        createNotificationChannel();
-        periodicNotification();
-    }
-    private void createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is not in the Support Library.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = getString(R.string.channel_name);
-            String description = getString(R.string.channel_description);
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-            channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this.
-            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());
-            notificationManager.createNotificationChannel(channel);
-        }
-    }
-    private void periodicNotification(){
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), CHANNEL_ID)
-                .setSmallIcon(R.drawable.notif_icon)
-                .setContentTitle("ciaos")
-                .setContentText("textContent")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setAutoCancel(true);
-
-        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            ActivityCompat.requestPermissions(requireActivity(),
-                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                    PERMISSION_REQUEST_POST_NOTIFICATIONS);
-            return;
-        }
-        nm.notify(666,builder.build());
-    }
 
     private void initBarChart(Cursor cursor) {
         final String title = "Step Situation";
         ArrayList<BarEntry> barEntries = new ArrayList<>();
         ArrayList<Integer> valori = new ArrayList<>();
-        final ArrayList<Long> giorniMsec = fillWeekDates();
+        final ArrayList<Long> dayInMs = fillWeekDates();
         int counter = 0;
         while (cursor.moveToNext()) {
+
             long day = cursor.getLong(cursor.getColumnIndexOrThrow("Start_Day"));
-            while (counter < giorniMsec.size() && giorniMsec.get(counter) < day) {
+
+            while (counter < dayInMs.size() && dayInMs.get(counter) != day) {
+                Log.d("chart",day +" "+dayInMs.get(counter)+" "+counter);
                 valori.add(0);
                 counter++;
+                Log.d("chart",valori.toString());
             }
+            Log.d("chart","quanto sono uguali "+day +" "+dayInMs.get(counter)+" "+counter);
+
             int steps = cursor.getInt(cursor.getColumnIndexOrThrow("total_pass"));
             valori.add(steps);
+            counter++;
         }
         cursor.close();
-        while (counter<giorniMsec.size()){
+        while (counter<dayInMs.size()){
             valori.add(0);
             counter++;
         }
-        ArrayList<String> giorni = convertLongToString(giorniMsec);
+        ArrayList<String> giorni = convertLongToString(dayInMs);
 
-//        Log.d("barChart", String.valueOf(valori.size()) + " valore counter"+counter);
-//        Log.d("barChart", valori.toString());
-//        Log.d("barChart",giorniMsec.toString());
+        Log.d("barChart", String.valueOf(valori.size()) );
+        Log.d("barChart", valori.toString());
 
-        for (int i = 0; i < giorniMsec.size(); i++) {
+
+        for (int i = 0; i < dayInMs.size(); i++) {
             barEntries.add(new BarEntry(i, valori.get(i)));
         }
         XAxis xAixs = barChart.getXAxis();
@@ -225,6 +180,7 @@ public class statisticFragment extends Fragment {
             int totaleTempoSpeso = cursor.getInt(cursor.getColumnIndexOrThrow("totale_tempo_speso"));
             etichette.add(nomeAttivita);
             valori.add(totaleTempoSpeso);
+
         }
 
         cursor.close();
@@ -264,8 +220,13 @@ public class statisticFragment extends Fragment {
         // Trova il primo giorno della settimana (Lunedì)
         calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
 
+        // Imposta (00:00:00.000)
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
         // Formattatore per la data
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM");
+//        SimpleDateFormat dataFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
         // Riempie l'array con le date della settimana
         for (int i = 0; i < 7; i++) {

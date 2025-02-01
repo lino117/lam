@@ -19,6 +19,9 @@ dependencyResolutionManagement {
         maven {
             url= uri("https://jitpack.io")
         }
+        maven {
+            url= uri("https://developer.huawei.com/repo/")
+        }
     }
 }
 
