@@ -25,53 +25,41 @@ public class UserActivityDetectionService {
     private final PendingIntent pendingIntent;
     private final String Costum_Intent_Action = "com.example.progettolam.transition.TRANSITIONS_RECEIVER_ACTION";
 
+    @SuppressLint("MutableImplicitPendingIntent")
     public UserActivityDetectionService(Context context) {
         activityRecognitionClient = ActivityRecognition.getClient(context);
-        Intent intent = new Intent(Costum_Intent_Action);
-//        intent.setAction("com.google.android.gms.location.ACTIVITY_TRANSITION");
-        pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        Intent intent = new Intent(context, UserActivityDetectionReceiver.class);
+        intent.setAction(Costum_Intent_Action);
+//        Intent intent = new Intent(Costum_Intent_Action);
+        pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT|PendingIntent.FLAG_MUTABLE);
     }
     public ActivityTransitionRequest buildTransitionRequest() {
         List<ActivityTransition> transitions = new ArrayList<>();
-        transitions.add(new ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.IN_VEHICLE)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                .build());
-        transitions.add(new ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.IN_VEHICLE)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
-                .build());
-        transitions.add(new ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.WALKING)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                .build());
-        transitions.add(new ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.WALKING)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
-                .build());
-//        transitions.add(new ActivityTransition.Builder()
-//                .setActivityType(DetectedActivity.TILTING)
-//                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-//                .build());
-//        transitions.add(new ActivityTransition.Builder()
-//                .setActivityType(DetectedActivity.TILTING)
-//                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
-//                .build());
-        transitions.add(new ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.STILL)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                .build());
-        transitions.add(new ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.STILL)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
-                .build());
+        Integer[] activities = {
+                DetectedActivity.STILL,
+                DetectedActivity.WALKING,
+                DetectedActivity.ON_FOOT,
+                DetectedActivity.RUNNING,
+                DetectedActivity.ON_BICYCLE,
+                DetectedActivity.IN_VEHICLE
+        };
+        for (int activity:
+             activities) {
+            transitions.add(new ActivityTransition.Builder()
+                    .setActivityType(activity)
+                    .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                    .build());
+            transitions.add(new ActivityTransition.Builder()
+                    .setActivityType(activity)
+                    .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                    .build());
+        }
         return new ActivityTransitionRequest(transitions);
     }
 
     @SuppressLint("MissingPermission")
-    public void startActivityUpdates(ActivityTransitionRequest request, PendingIntent pendingIntents) {
-        activityRecognitionClient.requestActivityTransitionUpdates(request, pendingIntents)
-
+    public void startActivityUpdates(ActivityTransitionRequest request) {
+        activityRecognitionClient.requestActivityTransitionUpdates(request, pendingIntent)
         .addOnSuccessListener(
                new OnSuccessListener<Void>() {
                    @Override

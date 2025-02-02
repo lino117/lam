@@ -11,10 +11,10 @@ import android.util.Log;
 import com.example.progettolam.struct.Filter;
 import com.example.progettolam.struct.Record;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 
 public class activityRecordDbHelper extends SQLiteOpenHelper {
@@ -106,7 +106,7 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
                 "AND " + activityRecordContract.RecordsEntry.COLUMN_NAME + " = ? ";
         long fWeek = getArgsDay("fWeek");
         long lWeek = getArgsDay("lWeek");
-
+        Log.d("chart","fWeek "+fWeek+" lWeek "+lWeek);
         String[] selectionArgs = {
                 Long.toString(fWeek),
                 Long.toString(lWeek),
@@ -131,7 +131,7 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
     }
     private Long getArgsDay(String  flag) {
         // Ottieni l'istanza di Calendar
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
         calendar.setFirstDayOfWeek(Calendar.MONDAY);
 
         switch (flag){
@@ -142,11 +142,15 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
                 calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
                 break;
             case "fWeek":
-                calendar.set(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek());
+                calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
                 break;
             case "lWeek":
                 // Il giorno parte da domenica....
-                calendar.add(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+                calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+                calendar.add(Calendar.DAY_OF_WEEK, 6);
+                break;
+            case "yesterday":
+                calendar.add(Calendar.DAY_OF_MONTH, -1);
                 break;
         }
         // Imposta (00:00:00.000)
@@ -156,9 +160,9 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
         calendar.set(Calendar.MILLISECOND, 0);
 
         Date day = calendar.getTime();
-        Log.d("barChart",flag + " "+ day);
+        Log.d("barChart",flag + " "+ day+" in millis "+(day.getTime()));
         // ritorna una data con un ora in meno per fuso orario
-        return day.getTime() - 3600000;
+        return day.getTime();
     };
     public Cursor getFilterCursor(SQLiteDatabase db, Filter filter) {
         ArrayList<String> selectionArray = new ArrayList<>();
@@ -197,6 +201,28 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
                 null,
                 orderBy,
                 null
+        );
+    }
+
+    public Cursor getYesterdaySteps(SQLiteDatabase db) {
+        String[] projection ={
+                "SUM(" + activityRecordContract.RecordsEntry.COLUMN_STEP + ") AS total_pass",
+        };
+        String selection =
+                activityRecordContract.RecordsEntry.COLUMN_START_DAY + " = ? " +
+                "AND " + activityRecordContract.RecordsEntry.COLUMN_NAME +" = ?";
+        String[] selectionArgs = {
+            Long.toString(getArgsDay("yesterday")),
+                "Walking"
+        };
+        return db.query(
+                activityRecordContract.RecordsEntry.TABLE_NAME,
+                projection,       // SELECT
+                selection,        // WHERE
+                selectionArgs,    // Argomenti della clausola WHERE
+                null,          // GROUP BY
+                null,             // HAVING
+                null           // ORDER BY
         );
     }
 }

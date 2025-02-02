@@ -27,7 +27,7 @@ public class activityRecordContract {
                     RecordsEntry.COLUMN_DURATION + " INTEGER," +
                     RecordsEntry.COLUMN_STEP + " INTEGER," +
                     RecordsEntry.COLUMN_START_TIME + " INTEGER," +
-                    RecordsEntry.COLUMN_END_TIME  + " INTEGER)" +
+                    RecordsEntry.COLUMN_END_TIME  + " INTEGER," +
                     RecordsEntry.COLUMN_START_DAY + " INTEGER," +
                     RecordsEntry.COLUMN_END_DAY + " INTEGER)" ;
 //                    RecordsEntry.COLUMN_START + " TEXT," +

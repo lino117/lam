@@ -94,6 +94,12 @@
             android:layout_height="match_parent"
             android:text="Send Test Intent"
             />
+<!--        <com.google.android.material.button.MaterialButton-->
+<!--            android:id="@+id/create_table"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:text="Create Table Da cancellare"-->
+<!--            />-->
     </LinearLayout>
 
     <LinearLayout

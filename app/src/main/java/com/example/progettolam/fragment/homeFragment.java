@@ -2,6 +2,9 @@ package com.example.progettolam.fragment;
 
 import static androidx.core.content.ContextCompat.registerReceiver;
 
+import android.annotation.SuppressLint;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +14,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -28,6 +32,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatTextView;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -42,8 +47,15 @@ import com.example.progettolam.struct.Record;
 //import com.example.progettolam.transition.HWDetectionService;
 import com.example.progettolam.transition.UserActivityDetectionReceiver;
 import com.example.progettolam.transition.UserActivityDetectionService;
+import com.google.android.gms.common.internal.safeparcel.SafeParcelableSerializer;
+import com.google.android.gms.location.ActivityRecognitionResult;
+import com.google.android.gms.location.ActivityTransition;
+import com.google.android.gms.location.ActivityTransitionEvent;
+import com.google.android.gms.location.ActivityTransitionResult;
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.material.button.MaterialButton;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -64,7 +76,7 @@ public class homeFragment extends Fragment implements SensorEventListener {
     private String selectedActivity;
     private long pauseOffset;
     private activityRecordDbHelper dbHelper;
-    private MaterialButton btnNotification, btnTransition,btnSendTestIntent;
+    private MaterialButton btnNotification, btnTransition,btnSendTestIntent,btnCreateTable;
     private AppCompatTextView txNotification, txTransition;
 
     private SensorManager sensorManager;
@@ -75,6 +87,8 @@ public class homeFragment extends Fragment implements SensorEventListener {
     private long numberSteps;
     private long finalNumSteps;
     private UserActivityDetectionService userActivityDetectionService;
+    String TRANSITIONS_RECEIVER_ACTION = "com.example.progettolam.transition.TRANSITIONS_RECEIVER_ACTION";
+
     private SQLiteDatabase db;
 
     public homeFragment() {
@@ -108,26 +122,30 @@ public class homeFragment extends Fragment implements SensorEventListener {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         initViews(view);
         initClickListeners();
         checkPermissions();
-
     }
 
     private void initActivityDetection() {
-        String TRANSITIONS_RECEIVER_ACTION = "com.example.progettolam.transition.TRANSITIONS_RECEIVER_ACTION";
 //        String ACTION_PROCESS_LOCATION = "com.huawei.hms.location.ACTION_PROCESS_LOCATION";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "detection_channel";
+//            String description = getString(R.string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("detection_channel", name, importance);
+//            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this.
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());
+            notificationManager.createNotificationChannel(channel);
+        }
 
         userActivityDetectionService = new UserActivityDetectionService(requireContext());
         Intent intent = new Intent(TRANSITIONS_RECEIVER_ACTION);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
-        userActivityDetectionService.startActivityUpdates(userActivityDetectionService.buildTransitionRequest(),pendingIntent);
+        @SuppressLint("MutableImplicitPendingIntent") PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_MUTABLE);
+        userActivityDetectionService.startActivityUpdates(userActivityDetectionService.buildTransitionRequest());
 
-//        hwDetectionService = new HWDetectionService(requireContext());
-//        Intent intent = new Intent(ACTION_PROCESS_LOCATION);
-//        PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
-//        hwDetectionService.startActivityRecognition(hwDetectionService.buildTransitionRequest(),pendingIntent);
 
 //        userActivityDetectionReceiver = new UserActivityDetectionReceiver();
 //        registerReceiver(requireContext(), userActivityDetectionReceiver, new IntentFilter(TRANSITIONS_RECEIVER_ACTION), ContextCompat.RECEIVER_NOT_EXPORTED);
@@ -137,7 +155,6 @@ public class homeFragment extends Fragment implements SensorEventListener {
         txTransition.setText("Transition On");
         btnTransition.setText("Click to switch off");
     }
-
     private void initViews(View view) {
         dbHelper = new activityRecordDbHelper(view.getContext());
         btnStart = view.findViewById(R.id.startBtn);
@@ -153,6 +170,7 @@ public class homeFragment extends Fragment implements SensorEventListener {
         btnTransition = view.findViewById(R.id.trasitionControll);
         txTransition = view.findViewById(R.id.tx_transition);
         btnSendTestIntent = view.findViewById(R.id.btn_send_testIntent);
+//        btnCreateTable = view.findViewById(R.id.create_table);
         pauseOffset = 0;
     }
     private void initClickListeners() {
@@ -161,13 +179,19 @@ public class homeFragment extends Fragment implements SensorEventListener {
         btnNotification.setOnClickListener(view -> switchNotification());
         btnTransition.setOnClickListener(view -> switchTransition());
         btnSendTestIntent.setOnClickListener(view -> sendTestIntent(view));
+//        btnCreateTable.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                dbHelper.onCreate(dbHelper.getWritableDatabase());
+//            }
+//        });
     }
     private void checkPermissions() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACTIVITY_RECOGNITION)
                 == PackageManager.PERMISSION_GRANTED) {
             // Il permesso è stato concesso, procedi con il sensore
             initializeSensorManager();
-            initActivityDetection();
+//            initActivityDetection();
         } else {
             // Richiedi il permesso
             ActivityCompat.requestPermissions(requireActivity(),
@@ -178,9 +202,9 @@ public class homeFragment extends Fragment implements SensorEventListener {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS)
                 == PackageManager.PERMISSION_GRANTED) {
 
-//            initPeriodicNotification();
-            btnNotification.setText("Click to switch on");
-            txNotification.setText("Notification is Off");
+            initPeriodicNotification();
+//            btnNotification.setText("Click to switch on");
+//            txNotification.setText("Notification is Off");
         } else {
             ActivityCompat.requestPermissions(requireActivity(),
                     new String[]{Manifest.permission.POST_NOTIFICATIONS},
@@ -199,8 +223,8 @@ public class homeFragment extends Fragment implements SensorEventListener {
                         "notification_work",
                         ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
                         periodicWorkRequest);
-        txNotification.setText("Notification is On");
 
+        txNotification.setText("Notification is On");
         btnNotification.setText("Click to switch off");
     }
     private void initializeSensorManager() {
@@ -210,8 +234,6 @@ public class homeFragment extends Fragment implements SensorEventListener {
             stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
             if (stepSensor == null) {
                 Toast.makeText(requireContext(), "Step counter sensor is not available on this device", Toast.LENGTH_LONG).show();
-            }else {
-                Toast.makeText(requireContext(), "Avengeeeer", Toast.LENGTH_LONG).show();
             }
         } else {
             Log.e(TAG, "SensorManager initialization failed.");
@@ -324,21 +346,7 @@ public class homeFragment extends Fragment implements SensorEventListener {
         return noCorrectDuration;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-//        if (stepSensor != null) {
-//            sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_UI);
-//        }
-    }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (sensorManager != null) {
-            sensorManager.unregisterListener(this);
-        }
-    }
     @Override
     public void onSensorChanged(SensorEvent event) {
 
@@ -357,16 +365,17 @@ public class homeFragment extends Fragment implements SensorEventListener {
             }
         }
     }
-
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         Log.d(TAG, "Sensor accuracy changed: " + accuracy);
     }
 
     private void switchTransition() {
+
         userActivityDetectionService.stopActivityUpdates();
         txTransition.setText("Transition is Off");
         btnTransition.setText("restart to switch On");
+
     }
 
     public void switchNotification() {
@@ -392,17 +401,70 @@ public class homeFragment extends Fragment implements SensorEventListener {
             }
 
     }
+
+    public void sendTestIntent(View view) {
+        Log.d("ActivityRecognition", "sendTestIntent");
+        Intent testIntent = new Intent(requireContext(), UserActivityDetectionReceiver.class);
+        testIntent.setAction(TRANSITIONS_RECEIVER_ACTION);
+//        requireContext().sendBroadcast(testIntent);
+
+//        Intent intent = new Intent(R)
+        List<ActivityTransitionEvent> events = new ArrayList<>();
+
+        // You can set desired events with their corresponding state
+
+        ActivityTransitionEvent transitionEvent = new ActivityTransitionEvent(
+                DetectedActivity.IN_VEHICLE,
+                ActivityTransition.ACTIVITY_TRANSITION_ENTER,
+                SystemClock.elapsedRealtimeNanos());
+        events.add(transitionEvent);
+
+        ActivityTransitionResult result = new ActivityTransitionResult(events);
+
+        SafeParcelableSerializer.serializeToIntentExtra(result, testIntent, "com.google.android.location.internal.EXTRA_ACTIVITY_TRANSITION_RESULT");
+        requireContext().sendBroadcast(testIntent);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+//        if (stepSensor != null) {
+//            sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_UI);
+//        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(this);
+        }
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        switchNotification();
+//        switchNotification();
+//        userActivityDetectionService.stopActivityUpdates();
+
+        WorkManager wk = WorkManager.getInstance(requireContext());
+
+        List<WorkInfo> workInfos = null;
+        try {
+            workInfos = wk.getWorkInfosForUniqueWork("notification_work").get();
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        if (workInfos != null && !workInfos.isEmpty()) {
+            WorkInfo.State state = workInfos.get(0).getState();
+            if (state == WorkInfo.State.ENQUEUED || state == WorkInfo.State.RUNNING) {
+                wk.cancelUniqueWork("notification_work");
+            }
+        }
 //        switchTransition();
 //        requireContext().unregisterReceiver(userActivityDetectionReceiver);
     }
 
-    public void sendTestIntent(View view) {
-        Intent testIntent = new Intent(requireContext(), UserActivityDetectionReceiver.class);
-        testIntent.setAction("com.google.android.gms.location.ACTIVITY_TRANSITION"); // Assicurati che l'azione corrisponda
-        requireContext().sendBroadcast(testIntent);
-    }
 }

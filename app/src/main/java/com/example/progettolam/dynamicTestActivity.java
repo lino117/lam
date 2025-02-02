@@ -18,12 +18,14 @@ import com.example.progettolam.fragment.homeFragment;
 import com.example.progettolam.fragment.historyFragment;
 import com.example.progettolam.fragment.statisticFragment;
 import com.example.progettolam.transition.UserActivityDetectionService;
+import com.google.android.gms.location.ActivityTransitionRequest;
 
 public class dynamicTestActivity extends AppCompatActivity implements View.OnClickListener {
 
     private LinearLayout llTime, llRecords, llStatistic;
     private ImageView ivTime, ivRecords, ivStatistic;
     private TextView tvTime, tvRecords, tvStatistic;
+    private UserActivityDetectionService userActivityDetectionService;
 
     FragmentManager fragmentManager;
 
@@ -56,6 +58,7 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
         tvRecords = findViewById(R.id.tv_records);
         tvStatistic = findViewById(R.id.tv_statistic);
 
+        userActivityDetectionService = new UserActivityDetectionService(this);
     }
     private void initEvent() {
         fragmentManager = getSupportFragmentManager();
@@ -71,7 +74,11 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
         llTime.setOnClickListener(this);
         llRecords.setOnClickListener(this);
         llStatistic.setOnClickListener(this);
+
+        ActivityTransitionRequest request = userActivityDetectionService.buildTransitionRequest();
+        userActivityDetectionService.startActivityUpdates(request);
     }
+
     private void resetBottomNavItem() {
         ivTime.setSelected(false);
         tvTime.setTextColor(getColor(R.color.disable_color));
@@ -136,6 +143,12 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
     @Override
     protected void onStop() {
         super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        userActivityDetectionService.stopActivityUpdates();
     }
 
 

@@ -26,6 +26,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.example.progettolam.R;
 import com.example.progettolam.database.activityRecordDbHelper;
@@ -45,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class statisticFragment extends Fragment {
 
@@ -107,9 +109,8 @@ public class statisticFragment extends Fragment {
 
         initBarChart(dpHelper.getWeeklySteps(db));
     }
-
-
     private void initBarChart(Cursor cursor) {
+        if (cursor!=null){
         final String title = "Step Situation";
         ArrayList<BarEntry> barEntries = new ArrayList<>();
         ArrayList<Integer> valori = new ArrayList<>();
@@ -120,7 +121,7 @@ public class statisticFragment extends Fragment {
             long day = cursor.getLong(cursor.getColumnIndexOrThrow("Start_Day"));
 
             while (counter < dayInMs.size() && dayInMs.get(counter) != day) {
-                Log.d("chart",day +" "+dayInMs.get(counter)+" "+counter);
+                Log.d("chart","db "+day +" statistic "+dayInMs.get(counter)+" "+counter);
                 valori.add(0);
                 counter++;
                 Log.d("chart",valori.toString());
@@ -158,6 +159,9 @@ public class statisticFragment extends Fragment {
         BarData barData = new BarData(barDataSet);
         barChart.setData(barData);
         barChart.invalidate();
+        }else {
+            Toast.makeText(requireContext(),"db vuoto",Toast.LENGTH_SHORT).show();
+        }
 
 
     }
@@ -172,6 +176,8 @@ public class statisticFragment extends Fragment {
     }
 
     private void initPieChart(Cursor cursor) {
+        if (cursor!=null){
+
         ArrayList<PieEntry> pieEntries = new ArrayList<>();
         ArrayList<String> etichette = new ArrayList<>();
         ArrayList<Integer> valori = new ArrayList<>();
@@ -204,18 +210,23 @@ public class statisticFragment extends Fragment {
 
         pieChart.setData(pieData);
         pieChart.invalidate();
+        }else {
+            Toast.makeText(requireContext(),"db vuoto",Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onDestroyView() {
+        super.onDestroyView();
         dpHelper.close();
         db.close();
     }
     public ArrayList<Long> fillWeekDates() {
         ArrayList<Long> giorni = new ArrayList<>();
+
         // Ottieni l'oggetto Calendar impostato alla data corrente
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+        calendar.setFirstDayOfWeek(Calendar.MONDAY);
 
         // Trova il primo giorno della settimana (Lunedì)
         calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
