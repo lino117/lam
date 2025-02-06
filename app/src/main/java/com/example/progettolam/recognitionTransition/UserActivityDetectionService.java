@@ -1,4 +1,4 @@
-package com.example.progettolam.transition;
+package com.example.progettolam.recognitionTransition;
 
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
@@ -15,7 +15,6 @@ import com.google.android.gms.location.ActivityTransitionRequest;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +29,6 @@ public class UserActivityDetectionService {
         activityRecognitionClient = ActivityRecognition.getClient(context);
         Intent intent = new Intent(context, UserActivityDetectionReceiver.class);
         intent.setAction(Costum_Intent_Action);
-//        Intent intent = new Intent(Costum_Intent_Action);
         pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT|PendingIntent.FLAG_MUTABLE);
     }
     public ActivityTransitionRequest buildTransitionRequest() {
@@ -38,9 +36,9 @@ public class UserActivityDetectionService {
         Integer[] activities = {
                 DetectedActivity.STILL,
                 DetectedActivity.WALKING,
-                DetectedActivity.ON_FOOT,
-                DetectedActivity.RUNNING,
-                DetectedActivity.ON_BICYCLE,
+//                DetectedActivity.ON_FOOT,
+//                DetectedActivity.RUNNING,
+//                DetectedActivity.ON_BICYCLE,
                 DetectedActivity.IN_VEHICLE
         };
         for (int activity:

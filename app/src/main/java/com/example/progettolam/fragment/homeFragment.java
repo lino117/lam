@@ -2,18 +2,14 @@ package com.example.progettolam.fragment;
 
 import static androidx.core.content.ContextCompat.registerReceiver;
 
-import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.database.sqlite.SQLiteDatabase;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -21,8 +17,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.Chronometer;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,13 +38,13 @@ import androidx.work.WorkManager;
 
 import com.example.progettolam.R;
 import com.example.progettolam.Worker.PeriodicNotificationWorker;
+import com.example.progettolam.chronometer.ChronometerService;
 import com.example.progettolam.database.activityRecordDbHelper;
 import com.example.progettolam.struct.Record;
 //import com.example.progettolam.transition.HWDetectionService;
-import com.example.progettolam.transition.UserActivityDetectionReceiver;
-import com.example.progettolam.transition.UserActivityDetectionService;
+import com.example.progettolam.recognitionTransition.UserActivityDetectionReceiver;
+import com.example.progettolam.recognitionTransition.UserActivityDetectionService;
 import com.google.android.gms.common.internal.safeparcel.SafeParcelableSerializer;
-import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.ActivityTransition;
 import com.google.android.gms.location.ActivityTransitionEvent;
 import com.google.android.gms.location.ActivityTransitionResult;
@@ -61,40 +57,30 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-public class homeFragment extends Fragment implements SensorEventListener {
-
+public class homeFragment extends Fragment {
     private static final String TAG = "DynamicFragment";
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
     private static final int PERMISSION_REQUEST_ACTIVITY_RECOGNITION = 1;
     private static final int PERMISSION_REQUEST_POST_NOTIFICATIONS = 1;
-
     private Button btnStart, btnStop;
-    private Chronometer chronometer;
     private Spinner activityList;
-    private TextView tvActiviting,tvStep;
+    private TextView tvActiviting, tvStep;
     private String selectedActivity;
-    private long pauseOffset;
     private activityRecordDbHelper dbHelper;
-    private MaterialButton btnNotification, btnTransition,btnSendTestIntent,btnCreateTable;
-    private AppCompatTextView txNotification, txTransition;
-
-    private SensorManager sensorManager;
-    UserActivityDetectionReceiver userActivityDetectionReceiver;
-//    HWDetectionService hwDetectionService;
-    private Sensor stepSensor;
-    private long stepsAtStart;
-    private long numberSteps;
-    private long finalNumSteps;
+    private MaterialButton btnNotification, btnTransition, btnSendTestIntent;
+    private AppCompatTextView txNotification, txTransition,tvDuration;
+    private long numberSteps, pauseOffset, finalSteps, duration;
     private UserActivityDetectionService userActivityDetectionService;
     String TRANSITIONS_RECEIVER_ACTION = "com.example.progettolam.transition.TRANSITIONS_RECEIVER_ACTION";
+    private Context context;
+    private boolean isActivatedChronometer,mReceiverRegistered,notification_open = false;
+    private MaterialButton btnSentIntentChorno;
 
-    private SQLiteDatabase db;
 
     public homeFragment() {
         // Required empty public constructor
     }
-
     public static homeFragment newInstance(String param1, String param2) {
         homeFragment fragment = new homeFragment();
         Bundle args = new Bundle();
@@ -108,8 +94,8 @@ public class homeFragment extends Fragment implements SensorEventListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            getArguments().getString(ARG_PARAM1);
-            getArguments().getString(ARG_PARAM2);
+            notification_open = getArguments().getBoolean("notification_open");
+            selectedActivity = getArguments().getString("activity");
         }
     }
 
@@ -122,13 +108,73 @@ public class homeFragment extends Fragment implements SensorEventListener {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        context = requireContext();
         initViews(view);
         initClickListeners();
-        checkPermissions();
+
+        if (notification_open && !mReceiverRegistered){
+            Log.d("Chrono fragment","notificaiont_id "+notification_open);
+            switchToAppChronometer();
+        }
+//        initChronometer();
+//        initServices();
+    }
+
+    public void switchToAppChronometer() {
+        registerReceiver(context, chronometerReceiver, new IntentFilter("com.example.chronometer.UPDATE"), ContextCompat.RECEIVER_NOT_EXPORTED);
+        isActivatedChronometer = true;
+        mReceiverRegistered=true;
+        if (isVisible()){
+            btnStart.setText(R.string.cmeter_pause);
+            tvActiviting.setText(selectedActivity);
+        }
+        notification_open = false;
+
+        ArrayAdapter<String> adapter = (ArrayAdapter<String>) activityList.getAdapter();
+        int position = adapter.getPosition(selectedActivity);
+        activityList.setSelection(position);
+    }
+
+    private void chronometerManager(String flag) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACTIVITY_RECOGNITION)
+                == PackageManager.PERMISSION_GRANTED) {
+            Intent intent = new Intent(context, ChronometerService.class);
+            Bundle bundle = new Bundle();
+            bundle.putString("chronometerState", flag);
+            bundle.putString("activity", selectedActivity);
+            intent.putExtras(bundle);
+            intent.setAction("FRAGMENT_REGISTRATION");
+            context.startService(intent);
+
+//            initActivityDetection();
+        } else {
+            ActivityCompat.requestPermissions(requireActivity(),
+                    new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
+                    PERMISSION_REQUEST_ACTIVITY_RECOGNITION);
+        }
+
+    }
+
+    private final BroadcastReceiver chronometerReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            long duration = intent.getLongExtra("duration", 0);
+            int steps = intent.getIntExtra("steps", 0);
+            setDisplay(duration,steps);
+            if (isVisible()){
+                tvDuration.setText(String.format("%02d:%02d:%02d", duration / 3600, duration / 60, duration % 60));
+                tvStep.setText(steps + " steps");
+            }
+
+        }
+    };
+    private void setDisplay(long duration, int steps) {
+        Log.d("Step fragment setDisplay",finalSteps+"passi "+this.duration+"sec");
+        this.duration = duration;
+        this.finalSteps = steps;
     }
 
     private void initActivityDetection() {
-//        String ACTION_PROCESS_LOCATION = "com.huawei.hms.location.ACTION_PROCESS_LOCATION";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "detection_channel";
 //            String description = getString(R.string.channel_description);
@@ -137,29 +183,22 @@ public class homeFragment extends Fragment implements SensorEventListener {
 //            channel.setDescription(description);
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this.
-            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
             notificationManager.createNotificationChannel(channel);
         }
-
         userActivityDetectionService = new UserActivityDetectionService(requireContext());
-        Intent intent = new Intent(TRANSITIONS_RECEIVER_ACTION);
-        @SuppressLint("MutableImplicitPendingIntent") PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_MUTABLE);
+//        Intent intent = new Intent(TRANSITIONS_RECEIVER_ACTION);
+//        @SuppressLint("MutableImplicitPendingIntent") PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_MUTABLE);
         userActivityDetectionService.startActivityUpdates(userActivityDetectionService.buildTransitionRequest());
-
-
-//        userActivityDetectionReceiver = new UserActivityDetectionReceiver();
-//        registerReceiver(requireContext(), userActivityDetectionReceiver, new IntentFilter(TRANSITIONS_RECEIVER_ACTION), ContextCompat.RECEIVER_NOT_EXPORTED);
-//        registerReceiver(requireContext(), userActivityDetectionReceiver, new IntentFilter(ACTION_PROCESS_LOCATION), ContextCompat.RECEIVER_NOT_EXPORTED);
-
-
         txTransition.setText("Transition On");
         btnTransition.setText("Click to switch off");
     }
+
     private void initViews(View view) {
         dbHelper = new activityRecordDbHelper(view.getContext());
         btnStart = view.findViewById(R.id.startBtn);
         btnStop = view.findViewById(R.id.stopBtn);
-        chronometer = view.findViewById(R.id.chrmter);
+
         activityList = view.findViewById(R.id.list_activity);
         tvActiviting = view.findViewById(R.id.tv_activiting);
         tvStep = view.findViewById(R.id.stepNum);
@@ -170,34 +209,34 @@ public class homeFragment extends Fragment implements SensorEventListener {
         btnTransition = view.findViewById(R.id.trasitionControll);
         txTransition = view.findViewById(R.id.tx_transition);
         btnSendTestIntent = view.findViewById(R.id.btn_send_testIntent);
-//        btnCreateTable = view.findViewById(R.id.create_table);
+        btnSentIntentChorno = view.findViewById(R.id.btn_send_testIntent_for_Chrono);
         pauseOffset = 0;
+        tvDuration=view.findViewById(R.id.tv_time);
     }
+
     private void initClickListeners() {
+
         btnStart.setOnClickListener(view -> handleStartButtonClick());
         btnStop.setOnClickListener(view -> handleStopButtonClick());
         btnNotification.setOnClickListener(view -> switchNotification());
         btnTransition.setOnClickListener(view -> switchTransition());
         btnSendTestIntent.setOnClickListener(view -> sendTestIntent(view));
-//        btnCreateTable.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                dbHelper.onCreate(dbHelper.getWritableDatabase());
-//            }
-//        });
+        btnSentIntentChorno.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent acceptIntent = new Intent(context, ChronometerService.class);
+                acceptIntent.setAction("ACCEPT_REGISTRATION");
+                acceptIntent.putExtra("activity","Walking");
+                acceptIntent.putExtra("notification_id", 117);
+                acceptIntent.putExtra("chronometerState","onStart");
+//                PendingIntent acceptPendingIntent = PendingIntent.getService(context, 0, acceptIntent, PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_MUTABLE);
+                context.startService(acceptIntent);
+            }
+        });
     }
-    private void checkPermissions() {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACTIVITY_RECOGNITION)
-                == PackageManager.PERMISSION_GRANTED) {
-            // Il permesso è stato concesso, procedi con il sensore
-            initializeSensorManager();
-//            initActivityDetection();
-        } else {
-            // Richiedi il permesso
-            ActivityCompat.requestPermissions(requireActivity(),
-                    new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
-                    PERMISSION_REQUEST_ACTIVITY_RECOGNITION);
-        }
+
+    private void initServices() {
+
 
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -211,10 +250,11 @@ public class homeFragment extends Fragment implements SensorEventListener {
                     PERMISSION_REQUEST_POST_NOTIFICATIONS);
         }
     }
+
     private void initPeriodicNotification() {
         PeriodicWorkRequest periodicWorkRequest =
                 new PeriodicWorkRequest.Builder(PeriodicNotificationWorker.class,
-                    15, TimeUnit.MINUTES)
+                        15, TimeUnit.MINUTES)
                         .setInitialDelay(10, TimeUnit.SECONDS)
                         .build();
 
@@ -227,97 +267,70 @@ public class homeFragment extends Fragment implements SensorEventListener {
         txNotification.setText("Notification is On");
         btnNotification.setText("Click to switch off");
     }
-    private void initializeSensorManager() {
 
-        sensorManager = (SensorManager) requireContext().getSystemService(Context.SENSOR_SERVICE);
-        if (sensorManager != null) {
-            stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-            if (stepSensor == null) {
-                Toast.makeText(requireContext(), "Step counter sensor is not available on this device", Toast.LENGTH_LONG).show();
-            }
-        } else {
-            Log.e(TAG, "SensorManager initialization failed.");
-        }
-    }
+    // TODO: da cancellare
+    // fino qua
 
     private void handleStartButtonClick() {
         selectedActivity = activityList.getSelectedItem().toString();
-        if (!chronometer.isActivated()) {
-            chronometer.setBase(SystemClock.elapsedRealtime() - pauseOffset);
-            chronometer.start();
-            chronometer.setActivated(true);
+        if (!isActivatedChronometer) {
+            isActivatedChronometer = true;
+            mReceiverRegistered=true;
+            registerReceiver(context, chronometerReceiver, new IntentFilter("com.example.chronometer.UPDATE"), ContextCompat.RECEIVER_NOT_EXPORTED);
+            chronometerManager("onStart");
             btnStart.setText(R.string.cmeter_pause);
             tvActiviting.setText(selectedActivity);
-
-            if (stepSensor != null && selectedActivity.equals( "Walking")) {
-                sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_FASTEST);
-            }
-
-
         } else {
-            chronometer.stop();
-            chronometer.setActivated(false);
-            pauseOffset = SystemClock.elapsedRealtime() - chronometer.getBase();
+            isActivatedChronometer=false;
+            mReceiverRegistered=false;
+            context.unregisterReceiver(chronometerReceiver);
+            chronometerManager("onPause");
             btnStart.setText(R.string.cmeter_continue);
-
-            if (sensorManager != null) {
-                sensorManager.unregisterListener(this);
-            }
-            Log.d("ActivityRecognition pass","dentro pause final->"+finalNumSteps+"step-> "+numberSteps);
-
-            // registra passo fatto
-            finalNumSteps += numberSteps;
-            // inizia valori
-            stepsAtStart = numberSteps = 0;
         }
     }
-
     private void handleStopButtonClick() {
-        if (chronometer.isActivated() || pauseOffset != 0) {
-            selectedActivity = activityList.getSelectedItem().toString();
-            chronometer.stop();
-            Record record = createRecord(System.currentTimeMillis(), SystemClock.elapsedRealtime());
-            chronometer.setBase(SystemClock.elapsedRealtime());
-            chronometer.setActivated(false);
-            pauseOffset = 0;
-            btnStart.setText(R.string.cmeter_start);
-            tvActiviting.setText("");
 
-            if (sensorManager != null) {
-                sensorManager.unregisterListener(this);
-            }
-//            db = dbHelper.getWritableDatabase();
-            long newRowID = dbHelper.insertData(record);
+        isActivatedChronometer=false;
+        if (mReceiverRegistered){
+            context.unregisterReceiver(chronometerReceiver);
+            mReceiverRegistered=false;
+        }
 
-            if (newRowID != -1) {
-                Toast.makeText(requireContext(), record.toString(), Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(requireContext(), "Insert error", Toast.LENGTH_LONG).show();
-            }
+        chronometerManager("onStop");
+        selectedActivity = activityList.getSelectedItem().toString();
+        Record record = createRecord(System.currentTimeMillis());
+        btnStart.setText(R.string.cmeter_start);
+        resetDisplay();
+
+        long newRowID = dbHelper.insertData(record);
+        if (newRowID != -1) {
+            Toast.makeText(requireContext(), record.toString(), Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(requireContext(), "Insert error", Toast.LENGTH_LONG).show();
         }
     }
-
-    private Record createRecord(long currentTime, long relativeTime) {
-        long duration = correctBias(relativeTime);
-        long startTime = currentTime - duration;
-        finalNumSteps+=numberSteps;
+    private void resetDisplay(){
+        tvDuration.setText(R.string.cMeterStartValue);
+        tvActiviting.setText("");
+        tvStep.setText("");
+    }
+    private Record createRecord(long currentTime) {
+        // trasforma duration da secondi in ms
+        long startTime = currentTime - this.duration*1000;
 //        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 //        SimpleDateFormat dayFormat = new SimpleDateFormat("dd/MM/yyyy");
         Record record = new Record();
         record.setNameActivity(selectedActivity);
-        record.setDuration((int) (duration / 1000));
-        if (selectedActivity.equals("Walking")){
-            record.setStep((int) finalNumSteps);
-        }else {
+        record.setDuration((int) (this.duration));
+        if (selectedActivity.equals("Walking")) {
+            record.setStep((int) finalSteps);
+        } else {
             record.setStep(null);
         }
-
         record.setStart_time(startTime % 86400000);
-        record.setEnd_time(currentTime % 86400000 );
-        record.setStart_day(setDay(startTime) );
+        record.setEnd_time(currentTime % 86400000);
+        record.setStart_day(setDay(startTime));
         record.setEnd_day(setDay(currentTime));
-
-        stepsAtStart = numberSteps = finalNumSteps = 0;
         return record;
     }
     private Long setDay(Long  time) {
@@ -334,41 +347,7 @@ public class homeFragment extends Fragment implements SensorEventListener {
         Log.d("day",(int)(calendar.getTimeInMillis()) +"   "+calendar.getTimeInMillis());
         return calendar.getTimeInMillis();
     };
-    private long correctBias(long relativeTime) {
-        final String text = chronometer.getText().toString();
-        final int bias = Character.getNumericValue(text.charAt(4));
-        long noCorrectDuration = relativeTime - chronometer.getBase();
 
-        final int lastDigit = (int) (noCorrectDuration / 1000 % 60 % 10);
-        if (lastDigit > bias || (bias == 9 && lastDigit == 0)) {
-            return noCorrectDuration - 1000;
-        }
-        return noCorrectDuration;
-    }
-
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-
-        if (event != null && event.sensor.getType() == Sensor.TYPE_STEP_COUNTER) {
-
-            if (chronometer.isActivated()) {
-                // stepsAtStart = 0 quindi assegno quello corrente, ovvero event.valus[0]
-                if (stepsAtStart == 0) {
-                    stepsAtStart = (long) event.values[0];
-                }
-                // ogni volta che cambia, registra quanti passi son stati fatti
-                numberSteps = (long) event.values[0] - stepsAtStart;
-
-                long displaySteps = finalNumSteps + numberSteps;
-                tvStep.setText(String.valueOf(displaySteps));
-            }
-        }
-    }
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        Log.d(TAG, "Sensor accuracy changed: " + accuracy);
-    }
 
     private void switchTransition() {
 
@@ -433,11 +412,53 @@ public class homeFragment extends Fragment implements SensorEventListener {
 //        }
     }
 
+    public boolean ismReceiverRegistered() {
+        return mReceiverRegistered;
+    }
+    private boolean isChronoServiceActived(){
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            Log.d("Chrono",service.service.getClassName());
+            if (service.service.getClassName().equals("com.example.progettolam.chronometer.ChronometerService")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
-    public void onPause() {
-        super.onPause();
-        if (sensorManager != null) {
-            sensorManager.unregisterListener(this);
+    public void onStart() {
+        super.onStart();
+        // interroga lo stato di foreground service
+        // uso lo stesso di quello in activity
+        // magari si puo provare di riusare parte del codice
+        if (!mReceiverRegistered && isChronoServiceActived()){
+            Log.d("Chrono fragment","onStart in fragment");
+            String stopForegroundAction = "com.example.chronometer.STOP_FOREGROUND_SERVICE";
+            Intent stopForegroundIntent = new Intent(stopForegroundAction);
+//            stopForegroundIntent.setAction(stopForegroundAction);
+            context.sendBroadcast(stopForegroundIntent);
+            Log.d("Chrono fragment","invio stop foreground intent");
+            switchToAppChronometer();
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        // riprende lo stato di foreground service
+        // porta registrazion in foreground service solo se
+        // - in app chronometer attivo e servizio e in attivo
+        if (mReceiverRegistered && isChronoServiceActived()){
+            Log.d("Chrono fragment","onStop in fragment "+mReceiverRegistered+" "+ismReceiverRegistered());
+            String startForegroundAction = "com.example.chronometer.START_FOREGROUND_SERVICE";
+            Intent startForegroundIntent = new Intent(startForegroundAction);
+            context.sendBroadcast(startForegroundIntent);
+            notification_open = false;
+            context.unregisterReceiver(chronometerReceiver);
+            mReceiverRegistered=false;
+            resetDisplay();
+            activityList.setSelection(0);
         }
     }
 
@@ -447,24 +468,31 @@ public class homeFragment extends Fragment implements SensorEventListener {
 //        switchNotification();
 //        userActivityDetectionService.stopActivityUpdates();
 
-        WorkManager wk = WorkManager.getInstance(requireContext());
-
-        List<WorkInfo> workInfos = null;
-        try {
-            workInfos = wk.getWorkInfosForUniqueWork("notification_work").get();
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        if (workInfos != null && !workInfos.isEmpty()) {
-            WorkInfo.State state = workInfos.get(0).getState();
-            if (state == WorkInfo.State.ENQUEUED || state == WorkInfo.State.RUNNING) {
-                wk.cancelUniqueWork("notification_work");
-            }
-        }
+//        WorkManager wk = WorkManager.getInstance(requireContext());
+//
+//        List<WorkInfo> workInfos = null;
+//        try {
+//            workInfos = wk.getWorkInfosForUniqueWork("notification_work").get();
+//        } catch (ExecutionException e) {
+//            throw new RuntimeException(e);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//        if (workInfos != null && !workInfos.isEmpty()) {
+//            WorkInfo.State state = workInfos.get(0).getState();
+//            if (state == WorkInfo.State.ENQUEUED || state == WorkInfo.State.RUNNING) {
+//                wk.cancelUniqueWork("notification_work");
+//            }
+//        }
 //        switchTransition();
 //        requireContext().unregisterReceiver(userActivityDetectionReceiver);
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mReceiverRegistered){
+            context.unregisterReceiver(chronometerReceiver);
+        }
+    }
 }

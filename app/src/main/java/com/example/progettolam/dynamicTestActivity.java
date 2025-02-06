@@ -1,6 +1,8 @@
 package com.example.progettolam;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -17,7 +19,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.example.progettolam.fragment.homeFragment;
 import com.example.progettolam.fragment.historyFragment;
 import com.example.progettolam.fragment.statisticFragment;
-import com.example.progettolam.transition.UserActivityDetectionService;
+import com.example.progettolam.recognitionTransition.UserActivityDetectionService;
 import com.google.android.gms.location.ActivityTransitionRequest;
 
 public class dynamicTestActivity extends AppCompatActivity implements View.OnClickListener {
@@ -26,7 +28,6 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
     private ImageView ivTime, ivRecords, ivStatistic;
     private TextView tvTime, tvRecords, tvStatistic;
     private UserActivityDetectionService userActivityDetectionService;
-
     FragmentManager fragmentManager;
 
 
@@ -42,6 +43,16 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
             return insets;
         });
 
+        fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        // 第三个 arg 可以接受一个bundle可以用来传输数据， 然后由dynamicFragment.class. onCreate 接受并使用
+        // Budle bundle = new budle();
+        // budle.putString("param1" 跟class里面的变量一样的名字或者把变量改成private然后用name.class.ARG_PARAM1来决定，“text, message”)
+        fragmentTransaction.replace(R.id.fcv_fragment, homeFragment.class, null,"fragment_home")
+                .addToBackStack("nameFragment") // 用来加入到fragment的stack里面 通过返回来获取上一个fragment
+                .setReorderingAllowed(true) // 用来辅助返回
+                .commit();
         initView();
         initEvent();
     }
@@ -61,15 +72,6 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
         userActivityDetectionService = new UserActivityDetectionService(this);
     }
     private void initEvent() {
-        fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        // 第三个 arg 可以接受一个bundle可以用来传输数据， 然后由dynamicFragment.class. onCreate 接受并使用
-        // Budle bundle = new budle();
-        // budle.putString("param1" 跟class里面的变量一样的名字或者把变量改成private然后用name.class.ARG_PARAM1来决定，“text, message”)
-        fragmentTransaction.replace(R.id.fcv_fragment, homeFragment.class, null)
-                .addToBackStack("nameFragment") // 用来加入到fragment的stack里面 通过返回来获取上一个fragment
-                .setReorderingAllowed(true) // 用来辅助返回
-                .commit();
         setActiveBottomNavItem(R.id.ll_time);
         llTime.setOnClickListener(this);
         llRecords.setOnClickListener(this);
@@ -78,7 +80,6 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
         ActivityTransitionRequest request = userActivityDetectionService.buildTransitionRequest();
         userActivityDetectionService.startActivityUpdates(request);
     }
-
     private void resetBottomNavItem() {
         ivTime.setSelected(false);
         tvTime.setTextColor(getColor(R.color.disable_color));
@@ -112,7 +113,7 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
             // 第三个 arg 可以接受一个bundle可以用来传输数据， 然后由dynamicFragment.class. onCreate 接受并使用
             // Budle bundle = new budle();
             // budle.putString("param1" 跟class里面的变量一样的名字或者把变量改成private然后用name.class.ARG_PARAM1来决定，“text, message”)
-            fragmentTransaction.replace(R.id.fcv_fragment, homeFragment.class, null)
+            fragmentTransaction.replace(R.id.fcv_fragment, homeFragment.class, null,"fragment_home")
                     .addToBackStack("nameFragment") // 用来加入到fragment的stack里面 通过返回来获取上一个fragment
                     .setReorderingAllowed(true) // 用来辅助返回
                     .commit();
@@ -122,7 +123,7 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
             fragmentManager = getSupportFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-            fragmentTransaction.replace(R.id.fcv_fragment, historyFragment.class, null)
+            fragmentTransaction.replace(R.id.fcv_fragment, historyFragment.class, null,"fragment_history")
                     .addToBackStack("nameFragment") // 用来加入到fragment的stack里面 通过返回来获取上一个fragment
                     .setReorderingAllowed(true) // 用来辅助返回
                     .commit();
@@ -131,7 +132,7 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
         else if (id == R.id.ll_statistic) {
             fragmentManager = getSupportFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.replace(R.id.fcv_fragment, statisticFragment.class, null)
+            fragmentTransaction.replace(R.id.fcv_fragment, statisticFragment.class, null,"fragment_statistic")
                     .addToBackStack("nameFragment") // 用来加入到fragment的stack里面 通过返回来获取上一个fragment
                     .setReorderingAllowed(true) // 用来辅助返回
                     .commit();
@@ -141,10 +142,45 @@ public class dynamicTestActivity extends AppCompatActivity implements View.OnCli
     }
 
     @Override
+    protected void onStart() {
+        Intent intent = getIntent();
+        if (intent.getAction() != null){
+            if (intent.getAction().equals("UPDATE_SERVICE_FOREGROUND_STATE")){
+                Intent stopForegroundIntent = new Intent("com.example.chronometer.STOP_FOREGROUND_SERVICE");
+                this.sendBroadcast(stopForegroundIntent);
+                Bundle bundle = new Bundle();
+                bundle.putBoolean(
+                        "notification_open",
+                        intent.getBooleanExtra("notification_open",false)
+                );
+                bundle.putString("activity", intent.getStringExtra("activity"));
+                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                // 第三个 arg 可以接受一个bundle可以用来传输数据， 然后由dynamicFragment.class. onCreate 接受并使用
+                // Budle bundle = new budle();
+                // budle.putString("param1" 跟class里面的变量一样的名字或者把变量改成private然后用name.class.ARG_PARAM1来决定，“text, message”)
+                fragmentTransaction.replace(R.id.fcv_fragment, homeFragment.class, bundle,"fragment_home")
+                        .addToBackStack("nameFragment") // 用来加入到fragment的stack里面 通过返回来获取上一个fragment
+                        .setReorderingAllowed(true) // 用来辅助返回
+                        .commit();
+            }
+        }else {
+            Log.d("Chrono activity on start","non e arrivato da notification");
+            homeFragment homeFragment = (homeFragment) fragmentManager.findFragmentByTag("fragment_home");
+            if (homeFragment!= null && homeFragment.isVisible()){
+                Log.d("Chrono","Fragment visible in activity allora stop foreground service");
+                Intent stopForegroundIntent = new Intent("com.example.chronometer.STOP_FOREGROUND_SERVICE");
+                this.sendBroadcast(stopForegroundIntent);
+            }
+        }
+
+
+        super.onStart();
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
     }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();

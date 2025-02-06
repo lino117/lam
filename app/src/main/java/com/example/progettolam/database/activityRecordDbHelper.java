@@ -49,8 +49,9 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
         db.close();
         return id;
     }
-    public Cursor getAll(SQLiteDatabase db){
-        String orderBy = activityRecordContract.RecordsEntry.COLUMN_START_DAY + " DESC";
+    public Cursor getList(SQLiteDatabase db){
+        String orderBy = activityRecordContract.RecordsEntry.COLUMN_START_DAY + " DESC,"
+                +activityRecordContract.RecordsEntry.COLUMN_START_TIME + " Desc";
         return  db.query(
                 activityRecordContract.RecordsEntry.TABLE_NAME,
                 null,

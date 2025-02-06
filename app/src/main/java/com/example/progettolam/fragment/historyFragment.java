@@ -106,11 +106,11 @@ public class historyFragment extends Fragment implements ModalBottomSheet.OnSent
         ivFilter=view.findViewById(R.id.iv_filter);
         lvHistory=view.findViewById(R.id.lv_history);
 
-        if( dpHelper.getAll(db).moveToNext()){
-            adapter = new historyCursorAdapter(requireContext(), dpHelper.getAll(db), 0);
+        if( dpHelper.getList(db).moveToNext()){
+            adapter = new historyCursorAdapter(requireContext(), dpHelper.getList(db), 0);
             adapter.setFilterQueryProvider(constraint -> {
                 if (constraint == null || constraint.length() == 0){
-                    return dpHelper.getAll(db);
+                    return dpHelper.getList(db);
                 }else {
                     return dpHelper.getFilterCursor(db, filter);
                 }

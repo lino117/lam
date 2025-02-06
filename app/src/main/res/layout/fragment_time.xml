@@ -13,13 +13,14 @@
         android:layout_height="250dp"
         android:orientation="horizontal"
         >
-
-        <Chronometer
-            android:id="@+id/chrmter"
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tv_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
             android:textSize="72sp"
-            android:layout_centerInParent="true"/>
+            android:text="@string/cMeterStartValue"
+            />
         <TextView
             android:id="@+id/tv_activiting"
             android:layout_width="wrap_content"
@@ -94,12 +95,12 @@
             android:layout_height="match_parent"
             android:text="Send Test Intent"
             />
-<!--        <com.google.android.material.button.MaterialButton-->
-<!--            android:id="@+id/create_table"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="match_parent"-->
-<!--            android:text="Create Table Da cancellare"-->
-<!--            />-->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_send_testIntent_for_Chrono"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="SendIntent to chonroService"
+            />
     </LinearLayout>
 
     <LinearLayout
