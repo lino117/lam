@@ -1,25 +1,14 @@
 package com.example.progettolam.fragment;
 
-import static androidx.core.content.ContextCompat.getSystemService;
-
-import android.Manifest;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.Context;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
 
-import androidx.annotation.LongDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.util.Log;
@@ -29,7 +18,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.example.progettolam.R;
-import com.example.progettolam.database.activityRecordDbHelper;
+import com.example.progettolam.database.ActivityRecordDbHelper;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -45,10 +34,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
 import java.util.TimeZone;
 
-public class statisticFragment extends Fragment {
+public class StatisticFragment extends Fragment {
 
 
     private static final String ARG_PARAM1 = "param1";
@@ -57,19 +45,19 @@ public class statisticFragment extends Fragment {
     private static final int PERMISSION_REQUEST_POST_NOTIFICATIONS = 1;
     private BarChart barChart;
     private PieChart pieChart;
-    activityRecordDbHelper dpHelper;
+    ActivityRecordDbHelper dpHelper;
     SQLiteDatabase db;
     NotificationManagerCompat nm;
     private String mParam1;
     private String mParam2;
 
-    public statisticFragment() {
+    public StatisticFragment() {
         // Required empty public constructor
     }   
 
 
-    public static statisticFragment newInstance(String param1, String param2) {
-        statisticFragment fragment = new statisticFragment();
+    public static StatisticFragment newInstance(String param1, String param2) {
+        StatisticFragment fragment = new StatisticFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -84,7 +72,7 @@ public class statisticFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
-        dpHelper = new activityRecordDbHelper(requireContext());
+        dpHelper = new ActivityRecordDbHelper(requireContext());
     }
 
     @Override
@@ -101,7 +89,7 @@ public class statisticFragment extends Fragment {
         barChart = view.findViewById(R.id.bar_chart);
         pieChart = view.findViewById(R.id.pie_chart);
 
-        dpHelper = new activityRecordDbHelper(requireContext());
+        dpHelper = new ActivityRecordDbHelper(requireContext());
 
         db = dpHelper.getReadableDatabase();
 

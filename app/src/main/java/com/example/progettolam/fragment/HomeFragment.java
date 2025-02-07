@@ -12,7 +12,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,26 +37,21 @@ import androidx.work.WorkManager;
 
 import com.example.progettolam.R;
 import com.example.progettolam.Worker.PeriodicNotificationWorker;
+import com.example.progettolam.autoRegistration.AutoRegistrationReceiver;
 import com.example.progettolam.chronometer.ChronometerService;
-import com.example.progettolam.database.activityRecordDbHelper;
+import com.example.progettolam.database.ActivityRecordDbHelper;
 import com.example.progettolam.struct.Record;
+import com.example.progettolam.timeConvertitor.TimeConverter;
 //import com.example.progettolam.transition.HWDetectionService;
-import com.example.progettolam.recognitionTransition.UserActivityDetectionReceiver;
 import com.example.progettolam.recognitionTransition.UserActivityDetectionService;
-import com.google.android.gms.common.internal.safeparcel.SafeParcelableSerializer;
-import com.google.android.gms.location.ActivityTransition;
-import com.google.android.gms.location.ActivityTransitionEvent;
-import com.google.android.gms.location.ActivityTransitionResult;
-import com.google.android.gms.location.DetectedActivity;
 import com.google.android.material.button.MaterialButton;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-public class homeFragment extends Fragment {
+public class HomeFragment extends Fragment {
     private static final String TAG = "DynamicFragment";
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
@@ -67,7 +61,7 @@ public class homeFragment extends Fragment {
     private Spinner activityList;
     private TextView tvActiviting, tvStep;
     private String selectedActivity;
-    private activityRecordDbHelper dbHelper;
+    private ActivityRecordDbHelper dbHelper;
     private MaterialButton btnNotification, btnTransition, btnSendTestIntent;
     private AppCompatTextView txNotification, txTransition,tvDuration;
     private long numberSteps, pauseOffset, finalSteps, duration;
@@ -76,13 +70,14 @@ public class homeFragment extends Fragment {
     private Context context;
     private boolean isActivatedChronometer,mReceiverRegistered,notification_open = false;
     private MaterialButton btnSentIntentChorno;
+    private TimeConverter timeConvertitor;
 
 
-    public homeFragment() {
+    public HomeFragment() {
         // Required empty public constructor
     }
-    public static homeFragment newInstance(String param1, String param2) {
-        homeFragment fragment = new homeFragment();
+    public static HomeFragment newInstance(String param1, String param2) {
+        HomeFragment fragment = new HomeFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -142,6 +137,7 @@ public class homeFragment extends Fragment {
             Bundle bundle = new Bundle();
             bundle.putString("chronometerState", flag);
             bundle.putString("activity", selectedActivity);
+            bundle.putString("serviceMode","inApp");
             intent.putExtras(bundle);
             intent.setAction("FRAGMENT_REGISTRATION");
             context.startService(intent);
@@ -195,7 +191,7 @@ public class homeFragment extends Fragment {
     }
 
     private void initViews(View view) {
-        dbHelper = new activityRecordDbHelper(view.getContext());
+        dbHelper = new ActivityRecordDbHelper(view.getContext());
         btnStart = view.findViewById(R.id.startBtn);
         btnStop = view.findViewById(R.id.stopBtn);
 
@@ -212,6 +208,7 @@ public class homeFragment extends Fragment {
         btnSentIntentChorno = view.findViewById(R.id.btn_send_testIntent_for_Chrono);
         pauseOffset = 0;
         tvDuration=view.findViewById(R.id.tv_time);
+        timeConvertitor = new TimeConverter();
     }
 
     private void initClickListeners() {
@@ -220,18 +217,39 @@ public class homeFragment extends Fragment {
         btnStop.setOnClickListener(view -> handleStopButtonClick());
         btnNotification.setOnClickListener(view -> switchNotification());
         btnTransition.setOnClickListener(view -> switchTransition());
-        btnSendTestIntent.setOnClickListener(view -> sendTestIntent(view));
+        btnSendTestIntent.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent stopAutoRegistrationIntent = new Intent(context, AutoRegistrationReceiver.class);
+                stopAutoRegistrationIntent.setAction("com.example.chronometer.AUTO_REGISTRATION_END");
+                stopAutoRegistrationIntent.putExtra("duration", 10);
+                stopAutoRegistrationIntent.putExtra("activity","Unknown");
+                stopAutoRegistrationIntent.putExtra("endTimeActivity",System.currentTimeMillis());
+                Log.d("Chrono", "invio stop intent"+stopAutoRegistrationIntent);
+                context.sendBroadcast(stopAutoRegistrationIntent);
+            }
+        });
+
         btnSentIntentChorno.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent acceptIntent = new Intent(context, ChronometerService.class);
-                acceptIntent.setAction("ACCEPT_REGISTRATION");
-                acceptIntent.putExtra("activity","Walking");
-                acceptIntent.putExtra("notification_id", 117);
-                acceptIntent.putExtra("chronometerState","onStart");
-//                PendingIntent acceptPendingIntent = PendingIntent.getService(context, 0, acceptIntent, PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_MUTABLE);
-                context.startService(acceptIntent);
+//                Intent acceptIntent = new Intent(context, ChronometerService.class);
+//                acceptIntent.setAction("ACCEPT_REGISTRATION");
+//                acceptIntent.putExtra("activity","Walking");
+//                acceptIntent.putExtra("notification_id", 117);
+//                acceptIntent.putExtra("chronometerState","onStart");
+////                PendingIntent acceptPendingIntent = PendingIntent.getService(context, 0, acceptIntent, PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_MUTABLE);
+//                context.startService(acceptIntent);
+                Log.d("Chrono","invio start registration intent");
+                Intent intentStartAutoRegistration = new Intent(context, ChronometerService.class);
+                intentStartAutoRegistration.setAction("AUTO_REGISTRATION");
+                intentStartAutoRegistration.putExtra("activity","Unknown");
+                intentStartAutoRegistration.putExtra("chronometerState","onStart");
+                intentStartAutoRegistration.putExtra("endTime","1738948800000");
+                intentStartAutoRegistration.putExtra("endTimeActivity",timeConvertitor.toLocalTimeZone(System.currentTimeMillis()));
+                context.startService(intentStartAutoRegistration);
             }
+
         });
     }
 
@@ -298,7 +316,7 @@ public class homeFragment extends Fragment {
 
         chronometerManager("onStop");
         selectedActivity = activityList.getSelectedItem().toString();
-        Record record = createRecord(System.currentTimeMillis());
+        Record record = createRecord(timeConvertitor.toLocalTimeZone(System.currentTimeMillis()));
         btnStart.setText(R.string.cmeter_start);
         resetDisplay();
 
@@ -329,26 +347,10 @@ public class homeFragment extends Fragment {
         }
         record.setStart_time(startTime % 86400000);
         record.setEnd_time(currentTime % 86400000);
-        record.setStart_day(setDay(startTime));
-        record.setEnd_day(setDay(currentTime));
+        record.setStart_day(timeConvertitor.setDayTimeToZero(startTime));
+        record.setEnd_day(timeConvertitor.setDayTimeToZero(currentTime));
         return record;
     }
-    private Long setDay(Long  time) {
-
-        // Crea un oggetto Calendar e imposta il tempo
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(time);
-
-        // Azzerare le ore, i minuti, i secondi e i millisecondi
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        Log.d("day",(int)(calendar.getTimeInMillis()) +"   "+calendar.getTimeInMillis());
-        return calendar.getTimeInMillis();
-    };
-
-
     private void switchTransition() {
 
         userActivityDetectionService.stopActivityUpdates();
@@ -382,26 +384,31 @@ public class homeFragment extends Fragment {
     }
 
     public void sendTestIntent(View view) {
-        Log.d("ActivityRecognition", "sendTestIntent");
-        Intent testIntent = new Intent(requireContext(), UserActivityDetectionReceiver.class);
-        testIntent.setAction(TRANSITIONS_RECEIVER_ACTION);
+        Log.d("Chrono", "sendStartAutoRegistrationIntent");
+        Intent stopAutoRegistrationIntent = new Intent(context, AutoRegistrationReceiver.class);
+        stopAutoRegistrationIntent.setAction("com.example.chronometer.AUTO_REGISTRATION_END");
+        stopAutoRegistrationIntent.putExtra("duration", duration);
+        stopAutoRegistrationIntent.putExtra("activity","Unknown");
+        context.sendBroadcast(stopAutoRegistrationIntent);
+//        Intent testIntent = new Intent(requireContext(), UserActivityDetectionReceiver.class);
+//        testIntent.setAction(TRANSITIONS_RECEIVER_ACTION);
+////        requireContext().sendBroadcast(testIntent);
+//
+////        Intent intent = new Intent(R)
+//        List<ActivityTransitionEvent> events = new ArrayList<>();
+//
+//        // You can set desired events with their corresponding state
+//
+//        ActivityTransitionEvent transitionEvent = new ActivityTransitionEvent(
+//                DetectedActivity.IN_VEHICLE,
+//                ActivityTransition.ACTIVITY_TRANSITION_ENTER,
+//                SystemClock.elapsedRealtimeNanos());
+//        events.add(transitionEvent);
+//
+//        ActivityTransitionResult result = new ActivityTransitionResult(events);
+//
+//        SafeParcelableSerializer.serializeToIntentExtra(result, testIntent, "com.google.android.location.internal.EXTRA_ACTIVITY_TRANSITION_RESULT");
 //        requireContext().sendBroadcast(testIntent);
-
-//        Intent intent = new Intent(R)
-        List<ActivityTransitionEvent> events = new ArrayList<>();
-
-        // You can set desired events with their corresponding state
-
-        ActivityTransitionEvent transitionEvent = new ActivityTransitionEvent(
-                DetectedActivity.IN_VEHICLE,
-                ActivityTransition.ACTIVITY_TRANSITION_ENTER,
-                SystemClock.elapsedRealtimeNanos());
-        events.add(transitionEvent);
-
-        ActivityTransitionResult result = new ActivityTransitionResult(events);
-
-        SafeParcelableSerializer.serializeToIntentExtra(result, testIntent, "com.google.android.location.internal.EXTRA_ACTIVITY_TRANSITION_RESULT");
-        requireContext().sendBroadcast(testIntent);
     }
 
     @Override

@@ -16,19 +16,19 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.example.progettolam.R;
-import com.example.progettolam.database.activityRecordDbHelper;
+import com.example.progettolam.database.ActivityRecordDbHelper;
 
 public class PeriodicNotificationWorker extends Worker {
     private static final int PERMISSION_REQUEST_POST_NOTIFICATIONS = 1;
     private String CHANNEL_ID = "periodic_messsage";
     private NotificationManagerCompat nm;
-    private activityRecordDbHelper dpHelper;
+    private ActivityRecordDbHelper dpHelper;
     private CharSequence messageStep,messageStepBody;
 
     public PeriodicNotificationWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
         createNotificationChannel();
-        dpHelper = new activityRecordDbHelper(context);
+        dpHelper = new ActivityRecordDbHelper(context);
     }
 
     @SuppressLint("MissingPermission")

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".fragment.homeFragment">
+    tools:context=".fragment.HomeFragment">
 
 <!-- qua metti le cose che possono comparire in fragment-->
     <RelativeLayout
@@ -93,13 +93,13 @@
             android:id="@+id/btn_send_testIntent"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="Send Test Intent"
+            android:text="Send stop intent"
             />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_send_testIntent_for_Chrono"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="SendIntent to chonroService"
+            android:text="SendIntent AutoRegistration"
             />
     </LinearLayout>
 

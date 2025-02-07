@@ -17,43 +17,43 @@ import java.util.Date;
 import java.util.TimeZone;
 
 
-public class activityRecordDbHelper extends SQLiteOpenHelper {
+public class ActivityRecordDbHelper extends SQLiteOpenHelper {
     // If you change the database schema, you must increment the database version.
     public static final int DATABASE_VERSION = 1;
     public static final String DATABASE_NAME = "ActivityRecords.db";
 
-    public activityRecordDbHelper(Context context) {
+    public ActivityRecordDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(activityRecordContract.SQL_CREATE_ENTRIES);
+        db.execSQL(ActivityRecordContract.SQL_CREATE_ENTRIES);
     }
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // This database is only a cache for online data, so its upgrade policy is
         // to simply to discard the data and start over
-        db.execSQL(activityRecordContract.SQL_DELETE_ENTRIES);
+        db.execSQL(ActivityRecordContract.SQL_DELETE_ENTRIES);
         onCreate(db);
     }
     public long insertData(Record record){
         SQLiteDatabase db = getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(activityRecordContract.RecordsEntry.COLUMN_NAME, record.getNameActivity());
-        values.put(activityRecordContract.RecordsEntry.COLUMN_DURATION, record.getDuration());
-        values.put(activityRecordContract.RecordsEntry.COLUMN_STEP, record.getStep());
-        values.put(activityRecordContract.RecordsEntry.COLUMN_START_DAY, record.getStart_day());
-        values.put(activityRecordContract.RecordsEntry.COLUMN_START_TIME, record.getStart_time());
-        values.put(activityRecordContract.RecordsEntry.COLUMN_END_DAY, record.getEnd_day());
-        values.put(activityRecordContract.RecordsEntry.COLUMN_END_TIME, record.getEnd_time());
-        long id = db.insert(activityRecordContract.RecordsEntry.TABLE_NAME,null,values);
+        values.put(ActivityRecordContract.RecordsEntry.COLUMN_NAME, record.getNameActivity());
+        values.put(ActivityRecordContract.RecordsEntry.COLUMN_DURATION, record.getDuration());
+        values.put(ActivityRecordContract.RecordsEntry.COLUMN_STEP, record.getStep());
+        values.put(ActivityRecordContract.RecordsEntry.COLUMN_START_DAY, record.getStart_day());
+        values.put(ActivityRecordContract.RecordsEntry.COLUMN_START_TIME, record.getStart_time());
+        values.put(ActivityRecordContract.RecordsEntry.COLUMN_END_DAY, record.getEnd_day());
+        values.put(ActivityRecordContract.RecordsEntry.COLUMN_END_TIME, record.getEnd_time());
+        long id = db.insert(ActivityRecordContract.RecordsEntry.TABLE_NAME,null,values);
         db.close();
         return id;
     }
     public Cursor getList(SQLiteDatabase db){
-        String orderBy = activityRecordContract.RecordsEntry.COLUMN_START_DAY + " DESC,"
-                +activityRecordContract.RecordsEntry.COLUMN_START_TIME + " Desc";
+        String orderBy = ActivityRecordContract.RecordsEntry.COLUMN_START_DAY + " DESC,"
+                + ActivityRecordContract.RecordsEntry.COLUMN_START_TIME + " Desc";
         return  db.query(
-                activityRecordContract.RecordsEntry.TABLE_NAME,
+                ActivityRecordContract.RecordsEntry.TABLE_NAME,
                 null,
                 null,
                 null,
@@ -68,23 +68,23 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
         // per ogni attivita
         // mensilmente
         String[] projection = {
-                activityRecordContract.RecordsEntry.COLUMN_NAME,
-               "SUM("+activityRecordContract.RecordsEntry.COLUMN_DURATION+") AS totale_tempo_speso"
+                ActivityRecordContract.RecordsEntry.COLUMN_NAME,
+               "SUM("+ ActivityRecordContract.RecordsEntry.COLUMN_DURATION+") AS totale_tempo_speso"
         };
 
-        String selection =  activityRecordContract.RecordsEntry.COLUMN_START_DAY + " >= ? " +
-                "AND " + activityRecordContract.RecordsEntry.COLUMN_START_DAY + " <= ?";
+        String selection =  ActivityRecordContract.RecordsEntry.COLUMN_START_DAY + " >= ? " +
+                "AND " + ActivityRecordContract.RecordsEntry.COLUMN_START_DAY + " <= ?";
         String[] selectionArgs = {
-                Long.toString(getArgsDay("fMonth")),
-                Long.toString(getArgsDay("lMonth"))
+                Long.toString(getFlagDay("fMonth")),
+                Long.toString(getFlagDay("lMonth"))
         };
 
-        String groupBy = activityRecordContract.RecordsEntry.COLUMN_NAME;
+        String groupBy = ActivityRecordContract.RecordsEntry.COLUMN_NAME;
 
         String orderBy = "totale_tempo_speso DESC";
 
         return db.query(
-                activityRecordContract.RecordsEntry.TABLE_NAME,
+                ActivityRecordContract.RecordsEntry.TABLE_NAME,
                 projection,       // SELECT
                 selection,        // WHERE
                 selectionArgs,    // Argomenti della WHERE
@@ -98,16 +98,16 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
     }
     public Cursor getWeeklySteps(SQLiteDatabase db) {
         String[] projection = {
-                activityRecordContract.RecordsEntry.COLUMN_START_DAY,
-                "SUM(" + activityRecordContract.RecordsEntry.COLUMN_STEP + ") AS total_pass",
+                ActivityRecordContract.RecordsEntry.COLUMN_START_DAY,
+                "SUM(" + ActivityRecordContract.RecordsEntry.COLUMN_STEP + ") AS total_pass",
         };
 
-        String selection =  activityRecordContract.RecordsEntry.COLUMN_START_DAY + " >= ? " +
-                "AND " + activityRecordContract.RecordsEntry.COLUMN_START_DAY + " <= ? " +
-                "AND " + activityRecordContract.RecordsEntry.COLUMN_NAME + " = ? ";
-        long fWeek = getArgsDay("fWeek");
-        long lWeek = getArgsDay("lWeek");
-        Log.d("chart","fWeek "+fWeek+" lWeek "+lWeek);
+        String selection =  ActivityRecordContract.RecordsEntry.COLUMN_START_DAY + " >= ? " +
+                "AND " + ActivityRecordContract.RecordsEntry.COLUMN_START_DAY + " <= ? " +
+                "AND " + ActivityRecordContract.RecordsEntry.COLUMN_NAME + " = ? ";
+        long fWeek = getFlagDay("fWeek");
+        long lWeek = getFlagDay("lWeek");
+//        Log.d("chart","fWeek "+fWeek+" lWeek "+lWeek);
         String[] selectionArgs = {
                 Long.toString(fWeek),
                 Long.toString(lWeek),
@@ -116,11 +116,11 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
                 "Walking"
         };
 
-        String groupBy = activityRecordContract.RecordsEntry.COLUMN_START_DAY;
+        String groupBy = ActivityRecordContract.RecordsEntry.COLUMN_START_DAY;
 
-        String orderBy = activityRecordContract.RecordsEntry.COLUMN_START_DAY + " ASC";
+        String orderBy = ActivityRecordContract.RecordsEntry.COLUMN_START_DAY + " ASC";
         return db.query(
-                activityRecordContract.RecordsEntry.TABLE_NAME,
+                ActivityRecordContract.RecordsEntry.TABLE_NAME,
                 projection,       // SELECT
                 selection,        // WHERE
                 selectionArgs,    // Argomenti della clausola WHERE
@@ -130,7 +130,7 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
         );
 
     }
-    private Long getArgsDay(String  flag) {
+    private Long getFlagDay(String  flag) {
         // Ottieni l'istanza di Calendar
         Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
         calendar.setFirstDayOfWeek(Calendar.MONDAY);
@@ -168,23 +168,32 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
     public Cursor getFilterCursor(SQLiteDatabase db, Filter filter) {
         ArrayList<String> selectionArray = new ArrayList<>();
         ArrayList<String> selectionArgsArray = new ArrayList<>();
-
-        selectionArray.add( "("+activityRecordContract.RecordsEntry.COLUMN_NAME + "= ? "+
-                "OR " + activityRecordContract.RecordsEntry.COLUMN_NAME +"= ? "+
-                "OR " + activityRecordContract.RecordsEntry.COLUMN_NAME +"= ? )");
+//        Log.d("DatePicker","filter in dbhelper: "+filter.toString());
+        selectionArray.add( "("+ ActivityRecordContract.RecordsEntry.COLUMN_NAME + "= ? "+
+                "OR " + ActivityRecordContract.RecordsEntry.COLUMN_NAME +"= ? "+
+                "OR " + ActivityRecordContract.RecordsEntry.COLUMN_NAME +"= ? "+
+                "OR " + ActivityRecordContract.RecordsEntry.COLUMN_NAME +"= ? )");
 
         selectionArgsArray.add(filter.getWalking());
         selectionArgsArray.add(filter.getDriving());
         selectionArgsArray.add(filter.getSitting());
+        selectionArgsArray.add(filter.getUnknown());
 
-        if (!filter.getStart().isEmpty()){
-            selectionArray.add("AND "+activityRecordContract.RecordsEntry.COLUMN_START_DAY + " >= ? ");
-            selectionArgsArray.add(filter.getStart());
+//        String start = Long.toString(filter.getStart());
+//        String end = Long.toString(filter.getEnd());
+        long start = filter.getStart();
+        long end = filter.getEnd();
+
+        if (start!=0){
+            selectionArray.add("AND " + ActivityRecordContract.RecordsEntry.COLUMN_START_DAY + " >= ? ");
+            selectionArgsArray.add(Long.toString(start));
         }
-        if (!filter.getEnd().isEmpty()){
-            selectionArray.add("AND "+activityRecordContract.RecordsEntry.COLUMN_END_DAY + " <= ? ");
-            selectionArgsArray.add(filter.getEnd());
+        if (end!=0){
+            selectionArray.add("AND " + ActivityRecordContract.RecordsEntry.COLUMN_END_DAY + " <= ? ");
+            selectionArgsArray.add(Long.toString(end));
         }
+//        Log.d("DatePicker","selectionArray "+selectionArray.toString());
+//        Log.d("DatePicker","selectionArgsArray "+selectionArgsArray.toString());
 
         String[] selection = new String[selectionArray.size()];
         selectionArray.toArray(selection);
@@ -192,9 +201,10 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
         String[] selectionArgs = new String[selectionArgsArray.size()];
         selectionArgsArray.toArray(selectionArgs);
 
-        String orderBy = activityRecordContract.RecordsEntry.COLUMN_START_DAY + " DESC";
+        String orderBy = ActivityRecordContract.RecordsEntry.COLUMN_START_DAY + " DESC,"+
+                 ActivityRecordContract.RecordsEntry.COLUMN_START_TIME + " DESC";
         return  db.query(
-                activityRecordContract.RecordsEntry.TABLE_NAME,
+                ActivityRecordContract.RecordsEntry.TABLE_NAME,
                 null,
                 TextUtils.join(" ", selection),
                 selectionArgs,
@@ -207,17 +217,17 @@ public class activityRecordDbHelper extends SQLiteOpenHelper {
 
     public Cursor getYesterdaySteps(SQLiteDatabase db) {
         String[] projection ={
-                "SUM(" + activityRecordContract.RecordsEntry.COLUMN_STEP + ") AS total_pass",
+                "SUM(" + ActivityRecordContract.RecordsEntry.COLUMN_STEP + ") AS total_pass",
         };
         String selection =
-                activityRecordContract.RecordsEntry.COLUMN_START_DAY + " = ? " +
-                "AND " + activityRecordContract.RecordsEntry.COLUMN_NAME +" = ?";
+                ActivityRecordContract.RecordsEntry.COLUMN_START_DAY + " = ? " +
+                "AND " + ActivityRecordContract.RecordsEntry.COLUMN_NAME +" = ?";
         String[] selectionArgs = {
-            Long.toString(getArgsDay("yesterday")),
+            Long.toString(getFlagDay("yesterday")),
                 "Walking"
         };
         return db.query(
-                activityRecordContract.RecordsEntry.TABLE_NAME,
+                ActivityRecordContract.RecordsEntry.TABLE_NAME,
                 projection,       // SELECT
                 selection,        // WHERE
                 selectionArgs,    // Argomenti della clausola WHERE

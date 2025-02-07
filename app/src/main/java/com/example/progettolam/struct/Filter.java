@@ -1,25 +1,34 @@
 package com.example.progettolam.struct;
 
 public class Filter {
-    private String start;
-    private String end;
+    private long start;
+    private long end;
     private String walking;
     private String driving;
     private String sitting;
+    private String unknown;
+    public Filter(){
+        this.start = 0;
+        this.end = 0;
+        this.walking = "";
+        this.driving = "";
+        this.sitting = "";
+        this.unknown="";
+    }
 
-    public String getStart() {
+    public long getStart() {
         return start;
     }
 
-    public void setStart(String start) {
+    public void setStart(long start) {
         this.start = start;
     }
 
-    public String getEnd() {
+    public long getEnd() {
         return end;
     }
 
-    public void setEnd(String end) {
+    public void setEnd(long end) {
         this.end = end;
     }
 
@@ -47,17 +56,27 @@ public class Filter {
         this.sitting = sitting;
     }
 
+    public String getUnknown() {
+        return unknown;
+    }
+
     @Override
     public String toString() {
         return "Filter{" +
                 "start='" + start + '\'' +
                 ", end='" + end + '\'' +
-                ", walking=" + walking +
-                ", driving=" + driving +
-                ", sitting=" + sitting +
+                ", walking='" + walking + '\'' +
+                ", driving='" + driving + '\'' +
+                ", sitting='" + sitting + '\'' +
+                ", unknown='" + unknown + '\'' +
                 '}';
     }
+
+    public void setUnknown(String unknown) {
+        this.unknown = unknown;
+    }
+
     public Boolean isNotFiltered(){
-        return start.isEmpty() && end.isEmpty() && !walking.isEmpty() && !driving.isEmpty() && !sitting.isEmpty();
+        return start!=0 && end!=0 && !walking.isEmpty() && !driving.isEmpty() && !sitting.isEmpty();
     }
 }

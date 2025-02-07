@@ -21,23 +21,23 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.progettolam.R;
-import com.example.progettolam.database.activityRecordDbHelper;
-import com.example.progettolam.database.activityRecordContract.RecordsEntry;
+import com.example.progettolam.database.ActivityRecordDbHelper;
+import com.example.progettolam.database.ActivityRecordContract.RecordsEntry;
 import com.example.progettolam.struct.Filter;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class historyFragment extends Fragment implements ModalBottomSheet.OnSentFilterListener {
+public class HistoryFragment extends Fragment implements ModalBottomSheet.OnSentFilterListener {
 
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
     private String mParam1;
     private String mParam2;
-    private activityRecordDbHelper dpHelper;
+    private ActivityRecordDbHelper dpHelper;
     private SQLiteDatabase db;
 
-    public historyFragment() {
+    public HistoryFragment() {
         // Required empty public constructor
     }
     FragmentManager fragmentManager;
@@ -48,8 +48,8 @@ public class historyFragment extends Fragment implements ModalBottomSheet.OnSent
     private Filter filter;
 
 
-    public static historyFragment newInstance(String param1, String param2) {
-        historyFragment fragment = new historyFragment();
+    public static HistoryFragment newInstance(String param1, String param2) {
+        HistoryFragment fragment = new HistoryFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -91,7 +91,7 @@ public class historyFragment extends Fragment implements ModalBottomSheet.OnSent
 
                 if (existingFragment == null || !existingFragment.isVisible()) {
                     ModalBottomSheet modalBottomSheet = new ModalBottomSheet();
-                    modalBottomSheet.setOnSentFilterListener(historyFragment.this);
+                    modalBottomSheet.setOnSentFilterListener(HistoryFragment.this);
                     modalBottomSheet.show(getParentFragmentManager(), ModalBottomSheet.TAG);
                 }
 
@@ -101,7 +101,7 @@ public class historyFragment extends Fragment implements ModalBottomSheet.OnSent
 
 
     private void initView(View view) {
-        dpHelper = new activityRecordDbHelper(requireContext());
+        dpHelper = new ActivityRecordDbHelper(requireContext());
         db = dpHelper.getReadableDatabase();
         ivFilter=view.findViewById(R.id.iv_filter);
         lvHistory=view.findViewById(R.id.lv_history);
@@ -125,6 +125,7 @@ public class historyFragment extends Fragment implements ModalBottomSheet.OnSent
     public void SentFilter(Filter passedFilter, Boolean EmptyFilter) {
         adapter.getFilter().filter(passedFilter.toString());
         filter = passedFilter;
+        Log.d("DatePicker","filter in history:"+filter.toString());
         ivFilter.setSelected(!EmptyFilter);
     }
 

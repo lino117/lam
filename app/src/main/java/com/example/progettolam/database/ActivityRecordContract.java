@@ -2,10 +2,10 @@ package com.example.progettolam.database;
 
 import android.provider.BaseColumns;
 
-public class activityRecordContract {
+public class ActivityRecordContract {
     // To prevent someone from accidentally instantiating the contract class,
     // make the constructor private.
-    private activityRecordContract() {}
+    private ActivityRecordContract() {}
 
     /* Inner class that defines the table contents */
     public static class RecordsEntry implements BaseColumns {

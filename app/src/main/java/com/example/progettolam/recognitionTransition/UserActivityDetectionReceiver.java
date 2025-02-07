@@ -20,7 +20,7 @@ import com.example.progettolam.chronometer.ChronometerService;
 import com.google.android.gms.location.ActivityTransitionEvent;
 import com.google.android.gms.location.ActivityTransitionResult;
 import com.google.android.gms.location.DetectedActivity;
-import com.example.progettolam.database.activityRecordDbHelper;
+import com.example.progettolam.database.ActivityRecordDbHelper;
 
 
 import java.util.Calendar;
@@ -29,13 +29,13 @@ import java.util.TimeZone;
 public class UserActivityDetectionReceiver extends BroadcastReceiver {
     private RemoteViews remoteViews;
     private static final String CHANNEL_ID = "detection_channel";
-    private activityRecordDbHelper dpHelper;
+    private ActivityRecordDbHelper dpHelper;
     private NotificationManagerCompat nm;
 
     @SuppressLint("MissingPermission")
     @Override
     public void onReceive(Context context, Intent intent) {
-        dpHelper = new activityRecordDbHelper(context);
+        dpHelper = new ActivityRecordDbHelper(context);
         String exitAcivity = "";
         String enterActivity = "";
         String messageTitle;
@@ -62,8 +62,9 @@ public class UserActivityDetectionReceiver extends BroadcastReceiver {
             messageTitle = "No activity detectng";
             messageBody = "Do you wanna register it?";
         }
-        long startTime = getTimeRange()[0];
-        long endTime = getTimeRange()[1];
+        // se attivita registrata risiede in un certo orario
+        long startTime = getAutoRegistrationTimeRange()[0];
+        long endTime = getAutoRegistrationTimeRange()[1];
         if (System.currentTimeMillis() >= startTime && System.currentTimeMillis() <= endTime){
             if (enterActivity.equals("Unrecognized")){
                 Intent intentStartAutoRegistration = new Intent(context, ChronometerService.class);
@@ -76,7 +77,6 @@ public class UserActivityDetectionReceiver extends BroadcastReceiver {
             }
         }else {
             nm.notify(117, creatNotification(context, messageTitle, messageBody, enterActivity));
-
         }
     }
     private String getActivityType(int type) {
@@ -113,6 +113,7 @@ public class UserActivityDetectionReceiver extends BroadcastReceiver {
         acceptIntent.putExtra("activity",enterActivity);
         acceptIntent.putExtra("notification_id", 117);
         acceptIntent.putExtra("chronometerState","onStart");
+        acceptIntent.putExtra("serviceMode","foreground");
         PendingIntent acceptPendingIntent = PendingIntent.getService(context, 0, acceptIntent, PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_MUTABLE);
 
         Intent rejectIntent = new Intent(context, ChronometerService.class);
@@ -130,7 +131,7 @@ public class UserActivityDetectionReceiver extends BroadcastReceiver {
                 .setAutoCancel(true)
                 .build();
     }
-    private long[] getTimeRange(){
+    private long[] getAutoRegistrationTimeRange(){
         Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
         calendar.set(Calendar.HOUR_OF_DAY, 23);  // Imposta l'orario di inizio 21:00 del giorno corrente
         calendar.set(Calendar.MINUTE, 0);

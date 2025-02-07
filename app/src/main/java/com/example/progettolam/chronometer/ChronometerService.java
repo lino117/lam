@@ -28,9 +28,9 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.example.progettolam.R;
 import com.example.progettolam.autoRegistration.AutoRegistrationReceiver;
-import com.example.progettolam.dynamicTestActivity;
-import com.example.progettolam.recognitionTransition.UserActivityDetectionReceiver;
+import com.example.progettolam.MainActivity;
 import com.example.progettolam.specialFeature.StepCounterService;
+import com.example.progettolam.timeConvertitor.TimeConverter;
 
 import java.util.Objects;
 
@@ -54,6 +54,7 @@ public class ChronometerService extends Service implements StepCounterService.St
     private long endTimeAutoRegistration;
     private String serviceMode;
     private long startActivityTime;
+    private TimeConverter timeConverter;
 
 
     @SuppressLint("NewApi")
@@ -63,6 +64,7 @@ public class ChronometerService extends Service implements StepCounterService.St
         handlerThread = new HandlerThread("ChronometerThread");
         handlerThread.start();
         handler = new Handler(handlerThread.getLooper());
+        timeConverter = new TimeConverter();
         nm = NotificationManagerCompat.from(this);
 
         this.chronometerBase = SystemClock.elapsedRealtime();
@@ -70,7 +72,7 @@ public class ChronometerService extends Service implements StepCounterService.St
         this.pauseOffset =0;
         this.finalSteps = 0;
         this.foregroundForRecognition = false;
-
+        this.serviceMode="";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel("chrono_channel", "Cronometro", NotificationManager.IMPORTANCE_LOW);
             nm.createNotificationChannel(channel);
@@ -78,11 +80,12 @@ public class ChronometerService extends Service implements StepCounterService.St
         IntentFilter filter = new IntentFilter();
         filter.addAction(START_FOREGROUND_SERVICE);
         filter.addAction(STOP_FOREGROUND_SERVICE);
+        filter.addAction("STOP_SERVICE_FROM_AUTO_REGISTRATION");
 
         updateReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-//            Log.d("Chrono revicer","intent non nullo in chronoservice");
+            Log.d("Chrono revicer","intent non nullo in chronoservice braodcast");
                 if (intent != null) {
                     String action = intent.getAction();
                     if (action.equals(STOP_FOREGROUND_SERVICE) && serviceMode.equals("foreground")) {
@@ -95,6 +98,9 @@ public class ChronometerService extends Service implements StepCounterService.St
                         startForeground(1, createNotification());
                         foregroundForRecognition = true;
                         serviceMode="foreground";
+                    }else if (action.equals("STOP_SERVICE_FROM_AUTO_REGISTRATION")){
+                        Log.d("Chrono revicer service broadcast", "ricevuto stop action");
+                        stopSelf();
                     }
                 } else { Log.d("Chrono revicer", "intent nullo");}
             }
@@ -112,14 +118,16 @@ public class ChronometerService extends Service implements StepCounterService.St
 
 //                intent.putExtra("specialFreature"."steps/km");
                 if (serviceMode.equals("autoRegistration")){
-                    if (System.currentTimeMillis() >= endTimeAutoRegistration){
+                    long endTimeActivity = timeConverter.toLocalTimeZone(System.currentTimeMillis());
+                    if (endTimeActivity >= endTimeAutoRegistration){
                         Intent stopAutoRegistrationIntent = new Intent(getApplicationContext(), AutoRegistrationReceiver.class);
                         stopAutoRegistrationIntent.setAction("com.example.chronometer.AUTO_REGISTRATION_END");
                         stopAutoRegistrationIntent.putExtra("duration", duration);
                         stopAutoRegistrationIntent.putExtra("activity","Unknown");
+                        stopAutoRegistrationIntent.putExtra("endTimeActivity",endTimeActivity);
                         sendBroadcast(stopAutoRegistrationIntent);
                     }
-                }else if (serviceMode.equals("foreground")) {
+                }else {
                     Intent intent = new Intent("com.example.chronometer.UPDATE");
                     intent.putExtra("duration", duration);
                     intent.putExtra("steps", finalSteps);
@@ -129,7 +137,7 @@ public class ChronometerService extends Service implements StepCounterService.St
                         Notification notification = createNotification();
                         nm.notify(1, notification);
                     } else {
-                        Log.d("Chrono revicer", "sto aggiornando con activity:");
+                        Log.d("Chrono revicer", "sto aggiornando con activity: duration--->"+duration);
                         sendBroadcast(intent);
                     }
                     handler.postDelayed(this, 1000);
@@ -259,7 +267,7 @@ public class ChronometerService extends Service implements StepCounterService.St
     }
     private Notification createNotification() {
 
-        Intent openActivityIntent = new Intent(this, dynamicTestActivity.class);
+        Intent openActivityIntent = new Intent(this, MainActivity.class);
         openActivityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         openActivityIntent.setAction("UPDATE_SERVICE_FOREGROUND_STATE");
         openActivityIntent.putExtra("notification_open",true);
