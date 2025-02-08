@@ -49,7 +49,7 @@ public class UserActivityDetectionReceiver extends BroadcastReceiver {
                         exitAcivity = getActivityType(event.getActivityType());
                     }
             }
-                messageTitle = "Sembra che stai "+enterActivity;
+                messageTitle = "Sembra che tu stia "+enterActivity;
                 messageBody = "Vuoi cominciare a registrare?";
             }else {
                 messageTitle="Activity Recognition result non ce";
@@ -77,9 +77,9 @@ public class UserActivityDetectionReceiver extends BroadcastReceiver {
     }
     private String getActivityType(int type) {
         switch (type) {
-            case DetectedActivity.IN_VEHICLE: return "Driving";
-            case DetectedActivity.STILL: return "Sitting";
-            case DetectedActivity.WALKING: return "Walking";
+            case DetectedActivity.IN_VEHICLE: return "Guidando";
+            case DetectedActivity.STILL: return "Seduto";
+            case DetectedActivity.WALKING: return "Camminando";
 //            case DetectedActivity.ON_FOOT: return "In piede";
 //            case DetectedActivity.RUNNING: return "Corsa";
 //            case DetectedActivity.UNKNOWN: return "Unknown";
