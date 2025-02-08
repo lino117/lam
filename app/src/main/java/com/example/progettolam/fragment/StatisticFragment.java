@@ -41,8 +41,6 @@ public class StatisticFragment extends Fragment {
 
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-    private static final String CHANNEL_ID = "periodic_messsage";
-    private static final int PERMISSION_REQUEST_POST_NOTIFICATIONS = 1;
     private BarChart barChart;
     private PieChart pieChart;
     ActivityRecordDbHelper dpHelper;

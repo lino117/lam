@@ -27,20 +27,16 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 public class UserActivityDetectionReceiver extends BroadcastReceiver {
-    private RemoteViews remoteViews;
     private static final String CHANNEL_ID = "detection_channel";
-    private ActivityRecordDbHelper dpHelper;
-    private NotificationManagerCompat nm;
-
     @SuppressLint("MissingPermission")
     @Override
     public void onReceive(Context context, Intent intent) {
-        dpHelper = new ActivityRecordDbHelper(context);
+
         String exitAcivity = "";
         String enterActivity = "";
         String messageTitle;
         String messageBody = null;
-        nm = NotificationManagerCompat.from(context.getApplicationContext());
+        NotificationManagerCompat nm = NotificationManagerCompat.from(context.getApplicationContext());
         createNotificationChannel(context);
 
         if (intent!=null){

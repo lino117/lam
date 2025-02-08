@@ -1,7 +1,5 @@
 package com.example.progettolam.chronometer;
 
-import static androidx.core.content.ContextCompat.registerReceiver;
-
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -26,9 +24,9 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import com.example.progettolam.MainActivity;
 import com.example.progettolam.R;
 import com.example.progettolam.autoRegistration.AutoRegistrationReceiver;
-import com.example.progettolam.MainActivity;
 import com.example.progettolam.specialFeature.StepCounterService;
 import com.example.progettolam.timeConvertitor.TimeConverter;
 
@@ -42,20 +40,31 @@ public class ChronometerService extends Service implements StepCounterService.St
     private Handler handler;
     private String activity;
     private boolean isBound = false;
-    private boolean isActivated;
     private StepCounterService stepCounterService;
+    // parte per special features
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            stepCounterService = ((StepCounterService.Binder) service).getService();
+            stepCounterService.setStepListener(ChronometerService.this);
+            isBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isBound = false;
+        }
+    };
     private boolean foregroundForRecognition;
     private NotificationManagerCompat nm;
     private RemoteViews remoteViews;
     private BroadcastReceiver updateReceiver;
-    private String START_FOREGROUND_SERVICE = "com.example.chronometer.START_FOREGROUND_SERVICE";
-    private String STOP_FOREGROUND_SERVICE = "com.example.chronometer.STOP_FOREGROUND_SERVICE";
+    private final String START_FOREGROUND_SERVICE = "com.example.chronometer.START_FOREGROUND_SERVICE";
+    private final String STOP_FOREGROUND_SERVICE = "com.example.chronometer.STOP_FOREGROUND_SERVICE";
     private boolean updateReceiverRegistered = false;
     private long endTimeAutoRegistration;
     private String serviceMode;
-    private long startActivityTime;
     private TimeConverter timeConverter;
-
 
     @SuppressLint("NewApi")
     @Override
@@ -68,11 +77,10 @@ public class ChronometerService extends Service implements StepCounterService.St
         nm = NotificationManagerCompat.from(this);
 
         this.chronometerBase = SystemClock.elapsedRealtime();
-        this.isActivated = false;
-        this.pauseOffset =0;
+        this.pauseOffset = 0;
         this.finalSteps = 0;
         this.foregroundForRecognition = false;
-        this.serviceMode="";
+        this.serviceMode = "";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel("chrono_channel", "Cronometro", NotificationManager.IMPORTANCE_LOW);
             nm.createNotificationChannel(channel);
@@ -85,24 +93,22 @@ public class ChronometerService extends Service implements StepCounterService.St
         updateReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-            Log.d("Chrono revicer","intent non nullo in chronoservice braodcast");
                 if (intent != null) {
                     String action = intent.getAction();
                     if (action.equals(STOP_FOREGROUND_SERVICE) && serviceMode.equals("foreground")) {
-                        Log.d("Chrono revicer service broadcast", "ricevuto stop action");
                         stopForeground(true);
                         foregroundForRecognition = false;
                         serviceMode = "inApp";
-                    } else if (action.equals(START_FOREGROUND_SERVICE) && serviceMode != "foreground"){
-                        Log.d("Chrono revicer service broadcast", "ricevuto start action");
+                    } else if (action.equals(START_FOREGROUND_SERVICE) && serviceMode != "foreground") {
                         startForeground(1, createNotification());
                         foregroundForRecognition = true;
-                        serviceMode="foreground";
-                    }else if (action.equals("STOP_SERVICE_FROM_AUTO_REGISTRATION")){
-                        Log.d("Chrono revicer service broadcast", "ricevuto stop action");
+                        serviceMode = "foreground";
+                    } else if (action.equals("STOP_SERVICE_FROM_AUTO_REGISTRATION")) {
                         stopSelf();
                     }
-                } else { Log.d("Chrono revicer", "intent nullo");}
+                } else {
+                    Log.d("Chrono revicer", "intent nullo");
+                }
             }
         };
 
@@ -115,29 +121,33 @@ public class ChronometerService extends Service implements StepCounterService.St
             public void run() {
                 long duration = (SystemClock.elapsedRealtime() - chronometerBase) / 1000;
 
-
-//                intent.putExtra("specialFreature"."steps/km");
-                if (serviceMode.equals("autoRegistration")){
+                if (serviceMode.equals("autoRegistration")) {
                     long endTimeActivity = timeConverter.toLocalTimeZone(System.currentTimeMillis());
-                    if (endTimeActivity >= endTimeAutoRegistration){
+                    if (endTimeActivity >= endTimeAutoRegistration) {
                         Intent stopAutoRegistrationIntent = new Intent(getApplicationContext(), AutoRegistrationReceiver.class);
                         stopAutoRegistrationIntent.setAction("com.example.chronometer.AUTO_REGISTRATION_END");
                         stopAutoRegistrationIntent.putExtra("duration", duration);
-                        stopAutoRegistrationIntent.putExtra("activity","Unknown");
-                        stopAutoRegistrationIntent.putExtra("endTimeActivity",endTimeActivity);
+                        stopAutoRegistrationIntent.putExtra("activity", "Unknown");
+                        stopAutoRegistrationIntent.putExtra("endTimeActivity", endTimeActivity);
                         sendBroadcast(stopAutoRegistrationIntent);
                     }
-                }else {
+                } else {
                     Intent intent = new Intent("com.example.chronometer.UPDATE");
                     intent.putExtra("duration", duration);
                     intent.putExtra("steps", finalSteps);
+                    intent.putExtra("activity", activity);
                     if (foregroundForRecognition) {
-                        Log.d("Chrono revicer", "sto aggiornando con foreground:");
+                        Log.d("Chrono","sto inviando da foreground");
                         remoteViews.setTextViewText(R.id.tv_foreground_duration, String.format("%02d:%02d:%02d", duration / 3600, duration / 60, duration % 60));
+                        if (activity.equals("Walking")) {
+                            remoteViews.setTextViewText(R.id.tv_foreground_sfNumber, String.valueOf(finalSteps));
+                            remoteViews.setTextViewText(R.id.tv_foreground_specialFeature, "Steps");
+                        }
                         Notification notification = createNotification();
                         nm.notify(1, notification);
                     } else {
-                        Log.d("Chrono revicer", "sto aggiornando con activity: duration--->"+duration);
+
+
                         sendBroadcast(intent);
                     }
                     handler.postDelayed(this, 1000);
@@ -150,15 +160,15 @@ public class ChronometerService extends Service implements StepCounterService.St
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("Chrono revicer on startcomand","intent "+intent);
-        if (intent!=null) {
+//        Log.d("Chrono revicer on startcomand","intent "+intent);
+        if (intent != null) {
             // questo pezzo solo se arriva da qualche intent! non ci capisco piu nulla...
             String action = intent.getAction();
 
             if (action.equals("REJECT_REGISTRATION")) {
-                if (updateReceiverRegistered){
+                if (updateReceiverRegistered) {
                     unregisterReceiver(updateReceiver);
-                    updateReceiverRegistered =false;
+                    updateReceiverRegistered = false;
                 }
                 nm.cancel(intent.getIntExtra("notification_id", 0));
                 stopSelf();
@@ -173,9 +183,8 @@ public class ChronometerService extends Service implements StepCounterService.St
                     foregroundForRecognition = true;
                     nm.cancel(intent.getIntExtra("notification_id", 0));
                 }
-                if(action.equals("AUTO_REGISTRATION")){
-                    this.endTimeAutoRegistration = intent.getLongExtra("endTime",0);
-                    this.startActivityTime = intent.getLongExtra("startTimeActivity",0);
+                if (action.equals("AUTO_REGISTRATION")) {
+                    this.endTimeAutoRegistration = intent.getLongExtra("endTime", 0);
                 }
                 switch (Objects.requireNonNull(choronometerState)) {
                     case "onStart":
@@ -195,9 +204,6 @@ public class ChronometerService extends Service implements StepCounterService.St
                     case "onStop":
                         this.onStop();
                         break;
-//            case"onContinue":{
-//                this.onStart();
-//            }
                 }
                 if (!isBound) {
                     if (activity.equals("Walking")) {
@@ -208,8 +214,8 @@ public class ChronometerService extends Service implements StepCounterService.St
                     remoteViews.setTextViewText(R.id.tv_foreground_activity, activity);
                 }
             }
-        }else{
-            Log.d("Chrono revicer on start comand","intent action null non so dove arriva");
+        } else {
+            Log.d("Chrono revicer on start comand", "intent action null non so dove arriva");
         }
         return START_STICKY;
     }
@@ -218,9 +224,9 @@ public class ChronometerService extends Service implements StepCounterService.St
     public void onDestroy() {
         handler.removeCallbacksAndMessages(null);
         handlerThread.quit();
-        if (updateReceiverRegistered){
+        if (updateReceiverRegistered) {
             unregisterReceiver(updateReceiver);
-            updateReceiverRegistered =false;
+            updateReceiverRegistered = false;
         }
         if (isBound) {
             unbindService(serviceConnection);
@@ -229,17 +235,19 @@ public class ChronometerService extends Service implements StepCounterService.St
         super.onDestroy();
     }
 
-    private void onStart(){
-        this.chronometerBase=SystemClock.elapsedRealtime()-pauseOffset;
-        this.isActivated =true;
+    private void onStart() {
+        this.chronometerBase = SystemClock.elapsedRealtime() - pauseOffset;
+
     }
-    private void onPause(){
-        this.isActivated =false;
+
+    private void onPause() {
+
         this.pauseOffset = SystemClock.elapsedRealtime() - this.chronometerBase;
     }
-    private void onStop(){
-        this.chronometerBase=SystemClock.elapsedRealtime()-pauseOffset;
-        this.isActivated =false;
+
+    private void onStop() {
+        this.chronometerBase = SystemClock.elapsedRealtime() - pauseOffset;
+
         stopSelf();
     }
 
@@ -248,38 +256,26 @@ public class ChronometerService extends Service implements StepCounterService.St
     public IBinder onBind(Intent intent) {
         return null;
     }
-    // parte per special features
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            stepCounterService = ((StepCounterService.Binder) service).getService();
-            stepCounterService.setStepListener(ChronometerService.this);
-            isBound = true;
-        }
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            isBound = false;
-        }
-    };
+
     @Override
     public void onStepCountUpdated(int steps) {
-        finalSteps+=steps;
+        finalSteps += steps;
     }
+
     private Notification createNotification() {
 
         Intent openActivityIntent = new Intent(this, MainActivity.class);
         openActivityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         openActivityIntent.setAction("UPDATE_SERVICE_FOREGROUND_STATE");
-        openActivityIntent.putExtra("notification_open",true);
+        openActivityIntent.putExtra("notification_open", true);
         openActivityIntent.putExtra("activity", activity);
-        PendingIntent openPendingIntent = PendingIntent.getActivity(this, 0, openActivityIntent, PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_MUTABLE);
+        PendingIntent openPendingIntent = PendingIntent.getActivity(this, 0, openActivityIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
 
         return new NotificationCompat.Builder(this, "chrono_channel")
                 .setSmallIcon(R.drawable.notif_icon)
                 .setContentTitle("Registrazione Partita")
                 .setContentText("Click per registrala in app")
                 .setContent(remoteViews)
-//                .setContentIntent(pendingIntent)
                 .setContentIntent(openPendingIntent)
                 .build();
     }

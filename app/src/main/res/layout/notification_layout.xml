@@ -27,13 +27,13 @@
             android:id="@+id/tv_foreground_sfNumber"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="10000"
+            android:text=""
             android:layout_marginHorizontal="10dp"/>
         <TextView
             android:id="@+id/tv_foreground_specialFeature"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="steps"
+            android:text=""
             android:layout_gravity="center"/>
 
     </LinearLayout>

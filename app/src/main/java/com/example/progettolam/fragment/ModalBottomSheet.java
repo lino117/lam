@@ -3,7 +3,6 @@ package com.example.progettolam.fragment;
 import android.app.DatePickerDialog;
 import android.os.Bundle;
 
-import androidx.annotation.LongDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatTextView;
@@ -47,8 +46,7 @@ public class ModalBottomSheet extends BottomSheetDialogFragment {
     private TextInputEditText txStartFilter, txEndFilter;
     private Chip resetFilterButton, activeFilterButton;
     private Filter filter;
-    private TimeConverter timeConvertitor;
-    private long startTimeFilter, endTimeFilter;
+    private TimeConverter timeConverter;
 
     public ModalBottomSheet() {
         // Required empty public constructor
@@ -132,9 +130,9 @@ public class ModalBottomSheet extends BottomSheetDialogFragment {
                 (view, year1, month1, dayOfMonth) -> {
                     String selectedDate = String.format("%02d/%02d/%04d", dayOfMonth, month1 + 1, year1);
                     if (txFieldFlag.equals("start")){
-                        filter.setStart(timeConvertitor.convertToMillis(year1,month1,dayOfMonth));
+                        filter.setStart(timeConverter.convertToMillis(year1,month1,dayOfMonth));
                     }else {
-                        filter.setEnd(timeConvertitor.convertToMillis(year1,month1,dayOfMonth));
+                        filter.setEnd(timeConverter.convertToMillis(year1,month1,dayOfMonth));
                     }
                     txField.setText(selectedDate);
                 },
@@ -163,7 +161,7 @@ public class ModalBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void initView(View view) {
-        timeConvertitor=new TimeConverter();
+        timeConverter =new TimeConverter();
         swWalking =view.findViewById(R.id.sw_walking);
         swDriving =view.findViewById(R.id.sw_Driving);
         swSitting =view.findViewById(R.id.sw_Sitting);

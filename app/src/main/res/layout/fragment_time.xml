@@ -79,75 +79,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/stepNum"
             android:textSize="40sp"
-            android:hint="@string/qua_sono_gli_step"
             />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_vertical">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_send_testIntent"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="Send stop intent"
-            />
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_send_testIntent_for_Chrono"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="SendIntent AutoRegistration"
-            />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:orientation="horizontal"
-        android:gravity="center_horizontal"
-        >
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center_horizontal"
-            >
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tx_notification"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/periodicControll"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="Notification Off"
-                />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tx_transition"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            />
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/trasitionControll"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="transition Off"
-            />
-
-        </LinearLayout>
-
-
     </LinearLayout>
 
 </LinearLayout>

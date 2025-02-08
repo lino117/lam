@@ -36,9 +36,7 @@ public class UserActivityDetectionService {
         Integer[] activities = {
                 DetectedActivity.STILL,
                 DetectedActivity.WALKING,
-//                DetectedActivity.ON_FOOT,
-//                DetectedActivity.RUNNING,
-//                DetectedActivity.ON_BICYCLE,
+
                 DetectedActivity.IN_VEHICLE
         };
         for (int activity:

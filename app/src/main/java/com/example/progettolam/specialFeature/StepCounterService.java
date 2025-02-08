@@ -13,7 +13,6 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 public class StepCounterService extends Service implements SensorEventListener {
-    private static final int PERMISSION_REQUEST_ACTIVITY_RECOGNITION = 1;
     private static final String TAG = "StepCounterService";
     // parte sensor
     private SensorManager sensorManager;
@@ -58,7 +57,6 @@ public class StepCounterService extends Service implements SensorEventListener {
         if (sensorManager != null) {
             stepCounterSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
             if (stepCounterSensor != null) {
-                Log.d(TAG, "Contapassi attivato!.");
                 stepsAtStart = 0;
                 stepOffset = 0;
                 registerSensor();

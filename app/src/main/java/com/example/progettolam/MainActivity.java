@@ -1,6 +1,8 @@
 package com.example.progettolam;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -10,17 +12,28 @@ import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
+import com.example.progettolam.Worker.PeriodicNotificationWorker;
 import com.example.progettolam.fragment.HomeFragment;
 import com.example.progettolam.fragment.HistoryFragment;
 import com.example.progettolam.fragment.StatisticFragment;
 import com.example.progettolam.recognitionTransition.UserActivityDetectionService;
 import com.google.android.gms.location.ActivityTransitionRequest;
+
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -29,6 +42,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView tvTime, tvRecords, tvStatistic;
     private UserActivityDetectionService userActivityDetectionService;
     FragmentManager fragmentManager;
+    private static final int PERMISSION_REQUEST_POST_NOTIFICATIONS = 1;
+
+
 
 
     @Override
@@ -44,17 +60,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-
-        // 第三个 arg 可以接受一个bundle可以用来传输数据， 然后由dynamicFragment.class. onCreate 接受并使用
-        // Budle bundle = new budle();
-        // budle.putString("param1" 跟class里面的变量一样的名字或者把变量改成private然后用name.class.ARG_PARAM1来决定，“text, message”)
-        fragmentTransaction.replace(R.id.fcv_fragment, HomeFragment.class, null,"fragment_home")
-                .addToBackStack("nameFragment") // 用来加入到fragment的stack里面 通过返回来获取上一个fragment
-                .setReorderingAllowed(true) // 用来辅助返回
-                .commit();
+//        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+//
+//        // 第三个 arg 可以接受一个bundle可以用来传输数据， 然后由dynamicFragment.class. onCreate 接受并使用
+//        // Budle bundle = new budle();
+//        // budle.putString("param1" 跟class里面的变量一样的名字或者把变量改成private然后用name.class.ARG_PARAM1来决定，“text, message”)
+//        fragmentTransaction.replace(R.id.fcv_fragment, HomeFragment.class, null,"fragment_home")
+//                .addToBackStack("nameFragment") // 用来加入到fragment的stack里面 通过返回来获取上一个fragment
+//                .setReorderingAllowed(true) // 用来辅助返回
+//                .commit();
         initView();
         initEvent();
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED) {
+            initPeriodicNotification();
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    PERMISSION_REQUEST_POST_NOTIFICATIONS);
+        }
+        initPeriodicNotification();
     }
     private void initView() {
         llTime = findViewById(R.id.ll_time);
@@ -140,43 +166,75 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
     }
+    private void initPeriodicNotification() {
+        PeriodicWorkRequest periodicWorkRequest =
+                new PeriodicWorkRequest.Builder(PeriodicNotificationWorker.class,
+                        24, TimeUnit.HOURS)
+                        .setInitialDelay(30, TimeUnit.MINUTES)
+                        .build();
+
+        WorkManager.getInstance(this).
+                enqueueUniquePeriodicWork(
+                        "notification_work",
+                        ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+                        periodicWorkRequest);
+    }
 
     @Override
     protected void onStart() {
-        Intent intent = getIntent();
-        if (intent.getAction() != null){
-            if (intent.getAction().equals("UPDATE_SERVICE_FOREGROUND_STATE")){
-                Intent stopForegroundIntent = new Intent("com.example.chronometer.STOP_FOREGROUND_SERVICE");
-                this.sendBroadcast(stopForegroundIntent);
-                Bundle bundle = new Bundle();
-                bundle.putBoolean(
-                        "notification_open",
-                        intent.getBooleanExtra("notification_open",false)
-                );
-                bundle.putString("activity", intent.getStringExtra("activity"));
-                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                // 第三个 arg 可以接受一个bundle可以用来传输数据， 然后由dynamicFragment.class. onCreate 接受并使用
-                // Budle bundle = new budle();
-                // budle.putString("param1" 跟class里面的变量一样的名字或者把变量改成private然后用name.class.ARG_PARAM1来决定，“text, message”)
-                fragmentTransaction.replace(R.id.fcv_fragment, HomeFragment.class, bundle,"fragment_home")
-                        .addToBackStack("nameFragment") // 用来加入到fragment的stack里面 通过返回来获取上一个fragment
-                        .setReorderingAllowed(true) // 用来辅助返回
-                        .commit();
-            }
-        }else {
-            Log.d("Chrono activity on start","non e arrivato da notification");
-            HomeFragment homeFragment = (HomeFragment) fragmentManager.findFragmentByTag("fragment_home");
-            if (homeFragment!= null && homeFragment.isVisible()){
-                Log.d("Chrono","Fragment visible in activity allora stop foreground service");
-                Intent stopForegroundIntent = new Intent("com.example.chronometer.STOP_FOREGROUND_SERVICE");
-                this.sendBroadcast(stopForegroundIntent);
-            }
-        }
-
-
         super.onStart();
+        Log.d("Chrono activity on start","onStart in activity");
+        switchChronometerService();
     }
 
+    private void switchChronometerService() {
+        Intent intent = getIntent();
+        String action = intent.getAction();
+        Log.d("Chrono switchChronometerService", "action ricevuto: "+action);
+        // cercare se home_fragment esiste gia.
+        HomeFragment existingFragment = (HomeFragment) fragmentManager.findFragmentByTag("fragment_home");
+
+        if (action != null) {
+            // caso trona in app da notification oppure alla creazione
+            if ("UPDATE_SERVICE_FOREGROUND_STATE".equals(action)) {
+                // se non esiste(alla creazione)
+                // se non visibile(quando in bakcground, quando torna in foreground pero non e al fragment giusto)
+                if (existingFragment == null ) {
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    Bundle bundle = new Bundle();
+                    Log.d("Chrono activity on start", "apro home Fragment da notification");
+                    bundle.putBoolean("notification_open", true);
+                    bundle.putString("activity", intent.getStringExtra("activity"));
+                    fragmentTransaction.replace(R.id.fcv_fragment, HomeFragment.class, bundle, "fragment_home")
+                            .setReorderingAllowed(true) // 用来辅助返回
+                            .commit();
+                }
+            }else if(action.equals("android.intent.action.MAIN")){
+                if (existingFragment==null){
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.add(R.id.fcv_fragment, HomeFragment.class, null, "fragment_home")
+                            .setReorderingAllowed(true) // 用来辅助返回
+                            .commit();
+                }
+
+            }
+        }
+    }
+    public void stopPeriodicNotification() {
+
+        WorkManager wk = WorkManager.getInstance(this);
+        try {
+            List<WorkInfo> workInfos = wk.getWorkInfosForUniqueWork("notification_work").get();
+            if (workInfos != null && !workInfos.isEmpty()) {
+                WorkInfo.State state = workInfos.get(0).getState();
+                if (state == WorkInfo.State.ENQUEUED || state == WorkInfo.State.RUNNING) {
+                    wk.cancelUniqueWork("notification_work");
+                }
+            }
+        } catch(ExecutionException | InterruptedException e){
+            throw new RuntimeException(e);
+        }
+    }
     @Override
     protected void onStop() {
         super.onStop();
@@ -185,6 +243,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         userActivityDetectionService.stopActivityUpdates();
+        stopPeriodicNotification();
     }
 
 

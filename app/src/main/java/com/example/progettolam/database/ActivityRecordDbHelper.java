@@ -107,12 +107,9 @@ public class ActivityRecordDbHelper extends SQLiteOpenHelper {
                 "AND " + ActivityRecordContract.RecordsEntry.COLUMN_NAME + " = ? ";
         long fWeek = getFlagDay("fWeek");
         long lWeek = getFlagDay("lWeek");
-//        Log.d("chart","fWeek "+fWeek+" lWeek "+lWeek);
         String[] selectionArgs = {
                 Long.toString(fWeek),
                 Long.toString(lWeek),
-//                "27/01/2025",
-//                "01/02/2025",
                 "Walking"
         };
 
