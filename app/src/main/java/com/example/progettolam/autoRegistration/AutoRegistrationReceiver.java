@@ -16,7 +16,7 @@ import androidx.core.app.NotificationManagerCompat;
 import com.example.progettolam.R;
 import com.example.progettolam.database.ActivityRecordDbHelper;
 import com.example.progettolam.struct.Record;
-import com.example.progettolam.timeConvertitor.TimeConverter;
+import com.example.progettolam.timeConverter.TimeConverter;
 
 import java.text.SimpleDateFormat;
 

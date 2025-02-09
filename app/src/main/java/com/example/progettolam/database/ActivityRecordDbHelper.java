@@ -129,7 +129,7 @@ public class ActivityRecordDbHelper extends SQLiteOpenHelper {
     }
     private Long getFlagDay(String  flag) {
         // Ottieni l'istanza di Calendar
-        Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Europe/Rome"));
         calendar.setFirstDayOfWeek(Calendar.MONDAY);
 
         switch (flag){

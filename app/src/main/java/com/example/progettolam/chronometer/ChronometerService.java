@@ -27,8 +27,9 @@ import androidx.core.app.NotificationManagerCompat;
 import com.example.progettolam.MainActivity;
 import com.example.progettolam.R;
 import com.example.progettolam.autoRegistration.AutoRegistrationReceiver;
+import com.example.progettolam.sharedPreferences.PrefsManager;
 import com.example.progettolam.specialFeature.StepCounterService;
-import com.example.progettolam.timeConvertitor.TimeConverter;
+import com.example.progettolam.timeConverter.TimeConverter;
 
 import java.util.Objects;
 
@@ -81,6 +82,7 @@ public class ChronometerService extends Service implements StepCounterService.St
         this.finalSteps = 0;
         this.foregroundForRecognition = false;
         this.serviceMode = "";
+        this.activity=" ";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel("chrono_channel", "Cronometro", NotificationManager.IMPORTANCE_LOW);
             nm.createNotificationChannel(channel);
@@ -99,6 +101,8 @@ public class ChronometerService extends Service implements StepCounterService.St
                         stopForeground(true);
                         foregroundForRecognition = false;
                         serviceMode = "inApp";
+                        Log.d("Chrono revicer", "intent stop foreground activity"+intent.getStringExtra("activity"));
+                        activity=intent.getStringExtra("activity");
                     } else if (action.equals(START_FOREGROUND_SERVICE) && serviceMode != "foreground") {
                         startForeground(1, createNotification());
                         foregroundForRecognition = true;
@@ -136,6 +140,7 @@ public class ChronometerService extends Service implements StepCounterService.St
                     intent.putExtra("duration", duration);
                     intent.putExtra("steps", finalSteps);
                     intent.putExtra("activity", activity);
+                    Log.d("Chrono",activity+" questo e attivita nel intent");
                     if (foregroundForRecognition) {
                         Log.d("Chrono","sto inviando da foreground");
                         remoteViews.setTextViewText(R.id.tv_foreground_duration, String.format("%02d:%02d:%02d", duration / 3600, duration / 60, duration % 60));
@@ -174,8 +179,9 @@ public class ChronometerService extends Service implements StepCounterService.St
                 stopSelf();
             } else {
                 String choronometerState = intent.getStringExtra("chronometerState");
-                activity = intent.getStringExtra("activity");
-
+//                activity = intent.getStringExtra("activity");
+                activity = PrefsManager.getString("activity");
+                Log.d("Chrono","activity in on start command: "+activity);
                 // stabilire se intent arriva da activity oppure da recognition-transition
                 if (action.equals("ACCEPT_REGISTRATION")) {
                     // 1 e' notification_id
@@ -237,17 +243,14 @@ public class ChronometerService extends Service implements StepCounterService.St
 
     private void onStart() {
         this.chronometerBase = SystemClock.elapsedRealtime() - pauseOffset;
-
     }
 
     private void onPause() {
-
         this.pauseOffset = SystemClock.elapsedRealtime() - this.chronometerBase;
     }
 
     private void onStop() {
         this.chronometerBase = SystemClock.elapsedRealtime() - pauseOffset;
-
         stopSelf();
     }
 

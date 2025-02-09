@@ -30,8 +30,9 @@ import androidx.fragment.app.Fragment;
 import com.example.progettolam.R;
 import com.example.progettolam.chronometer.ChronometerService;
 import com.example.progettolam.database.ActivityRecordDbHelper;
+import com.example.progettolam.sharedPreferences.PrefsManager;
 import com.example.progettolam.struct.Record;
-import com.example.progettolam.timeConvertitor.TimeConverter;
+import com.example.progettolam.timeConverter.TimeConverter;
 
 public class HomeFragment extends Fragment {
     private static final String TAG = "DynamicFragment";
@@ -94,13 +95,13 @@ public class HomeFragment extends Fragment {
             int steps = intent.getIntExtra("steps", 0);
             String activity = intent.getStringExtra("activity");
             setVariables(duration, steps, activity);
-//            if (isVisible()) {
+            if (isVisible()) {
                 tvDuration.setText(String.format("%02d:%02d:%02d", duration / 3600, duration / 60, duration % 60));
                 tvActiviting.setText(activity);
-                if (activity.equals("Walking")) {
+                if (selectedActivity!=null && selectedActivity.equals("Walking")){
                     tvStep.setText(steps + " steps");
                 }
-//            }
+            }
 
         }
     };
@@ -119,11 +120,10 @@ public class HomeFragment extends Fragment {
         btnStart.setText(R.string.cmeter_pause);
 
         notification_open = false;
-
+        Log.d("Chrono fragment", "ChronoMeter in app is on "+selectedActivity);
         ArrayAdapter<String> adapter = (ArrayAdapter<String>) activityList.getAdapter();
         int position = adapter.getPosition(selectedActivity);
         activityList.setSelection(position);
-        Log.d("Chrono fragment", "ChronoMeter in app is on");
     }
 
     private void chronometerManager(String flag) {
@@ -134,6 +134,12 @@ public class HomeFragment extends Fragment {
             Bundle bundle = new Bundle();
             bundle.putString("chronometerState", flag);
             bundle.putString("activity", selectedActivity);
+
+            if (flag.equals("onStart") ){
+                PrefsManager.saveString("activity", selectedActivity);
+            }
+
+            Log.d("Chrono",selectedActivity+"all inizio di start");
             bundle.putString("serviceMode", "inApp");
             intent.putExtras(bundle);
             intent.setAction("FRAGMENT_REGISTRATION");
@@ -262,9 +268,13 @@ public class HomeFragment extends Fragment {
         Log.d("Chrono fragment", "onStart in fragment");
         Log.d("Chrono fragment", "on Start: mRegister+serviceActived check :"+(!mReceiverRegistered && isChronoServiceActived()));
         if (!mReceiverRegistered && isChronoServiceActived()) {
-            Log.d("Chrono fragment", "on Start: no register no activeChrono");
+            if (selectedActivity==null){
+                selectedActivity=PrefsManager.getString("activity");
+            }
+            Log.d("Chrono fragment", "on Start: no register no activeChrono activity is "+selectedActivity);
             String stopForegroundAction = "com.example.chronometer.STOP_FOREGROUND_SERVICE";
             Intent stopForegroundIntent = new Intent(stopForegroundAction);
+            stopForegroundIntent.putExtra("activity", selectedActivity);
             context.sendBroadcast(stopForegroundIntent);
             switchToAppChronometer();
         }

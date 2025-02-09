@@ -14,7 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.progettolam.R;
-import com.example.progettolam.timeConvertitor.TimeConverter;
+import com.example.progettolam.timeConverter.TimeConverter;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.materialswitch.MaterialSwitch;

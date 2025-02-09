@@ -112,7 +112,6 @@ public class StatisticFragment extends Fragment {
                 counter++;
                 Log.d("chart",valori.toString());
             }
-            Log.d("chart","quanto sono uguali "+day +" "+dayInMs.get(counter)+" "+counter);
 
             int steps = cursor.getInt(cursor.getColumnIndexOrThrow("total_pass"));
             valori.add(steps);
@@ -211,7 +210,7 @@ public class StatisticFragment extends Fragment {
         ArrayList<Long> giorni = new ArrayList<>();
 
         // Ottieni l'oggetto Calendar impostato alla data corrente
-        Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Europe/Rome"));
         calendar.setFirstDayOfWeek(Calendar.MONDAY);
 
         // Trova il primo giorno della settimana (Lunedì)

@@ -1,13 +1,12 @@
-package com.example.progettolam.timeConvertitor;
+package com.example.progettolam.timeConverter;
 
 import android.util.Log;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.TimeZone;
 
 public class TimeConverter {
-    private Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+    private Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Europe/Rome"));
 
     // funzioni che convertono solo
     public long toLocalTimeZone(long timestamp) {

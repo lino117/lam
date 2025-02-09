@@ -29,6 +29,7 @@ import com.example.progettolam.fragment.HomeFragment;
 import com.example.progettolam.fragment.HistoryFragment;
 import com.example.progettolam.fragment.StatisticFragment;
 import com.example.progettolam.recognitionTransition.UserActivityDetectionService;
+import com.example.progettolam.sharedPreferences.PrefsManager;
 import com.google.android.gms.location.ActivityTransitionRequest;
 
 import java.util.List;
@@ -45,8 +46,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int PERMISSION_REQUEST_POST_NOTIFICATIONS = 1;
 
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,15 +59,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         fragmentManager = getSupportFragmentManager();
-//        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-//
-//        // 第三个 arg 可以接受一个bundle可以用来传输数据， 然后由dynamicFragment.class. onCreate 接受并使用
-//        // Budle bundle = new budle();
-//        // budle.putString("param1" 跟class里面的变量一样的名字或者把变量改成private然后用name.class.ARG_PARAM1来决定，“text, message”)
-//        fragmentTransaction.replace(R.id.fcv_fragment, HomeFragment.class, null,"fragment_home")
-//                .addToBackStack("nameFragment") // 用来加入到fragment的stack里面 通过返回来获取上一个fragment
-//                .setReorderingAllowed(true) // 用来辅助返回
-//                .commit();
         initView();
         initEvent();
 
@@ -94,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvTime = findViewById(R.id.tv_time);
         tvRecords = findViewById(R.id.tv_records);
         tvStatistic = findViewById(R.id.tv_statistic);
-
+        PrefsManager.init(this);
         userActivityDetectionService = new UserActivityDetectionService(this);
     }
     private void initEvent() {
