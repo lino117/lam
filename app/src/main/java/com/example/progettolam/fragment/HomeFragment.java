@@ -102,7 +102,6 @@ public class HomeFragment extends Fragment {
                     tvStep.setText(steps + " steps");
                 }
             }
-
         }
     };
 

@@ -29,6 +29,5 @@ public class TimeConverter {
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
-        Log.d("DatePicker","convertToMillis"+calendar.getTimeInMillis()+"");
         return calendar.getTimeInMillis();
     }}

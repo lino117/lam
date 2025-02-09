@@ -158,8 +158,6 @@ public class ActivityRecordDbHelper extends SQLiteOpenHelper {
         calendar.set(Calendar.MILLISECOND, 0);
 
         Date day = calendar.getTime();
-        Log.d("barChart",flag + " "+ day+" in millis "+(day.getTime()));
-        // ritorna una data con un ora in meno per fuso orario
         return day.getTime();
     };
     public Cursor getFilterCursor(SQLiteDatabase db, Filter filter) {
@@ -211,7 +209,6 @@ public class ActivityRecordDbHelper extends SQLiteOpenHelper {
                 null
         );
     }
-
     public Cursor getYesterdaySteps(SQLiteDatabase db) {
         String[] projection ={
                 "SUM(" + ActivityRecordContract.RecordsEntry.COLUMN_STEP + ") AS total_pass",

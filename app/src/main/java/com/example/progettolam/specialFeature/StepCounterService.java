@@ -9,7 +9,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
-
 import androidx.annotation.Nullable;
 
 public class StepCounterService extends Service implements SensorEventListener {
@@ -18,15 +17,13 @@ public class StepCounterService extends Service implements SensorEventListener {
     private SensorManager sensorManager;
     private Sensor stepCounterSensor;
     private long stepsAtStart, finalSteps, stepOffset;
-    private StepListener stepListener;
-
-
-    public interface StepListener {
-        void onStepCountUpdated(int steps);
-    }
-    public void setStepListener(StepListener listener) {
-        this.stepListener = listener;
-    }
+        private StepListener stepListener;
+        public interface StepListener {
+            void onStepCountUpdated(int steps);
+        }
+        public void setStepListener(StepListener listener) {
+            this.stepListener = listener;
+        }
 
     @Override
     public void onSensorChanged(SensorEvent event) {

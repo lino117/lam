@@ -70,7 +70,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     new String[]{Manifest.permission.POST_NOTIFICATIONS},
                     PERMISSION_REQUEST_POST_NOTIFICATIONS);
         }
-        initPeriodicNotification();
     }
     private void initView() {
         llTime = findViewById(R.id.ll_time);
